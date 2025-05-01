@@ -1,0 +1,33 @@
+name: Deploy front-end to GitHub Pages
+
+on:
+  push:
+    branches: [main]          # main 分支有任何提交就触发
+    paths: ['frontend/**']    # 只有前端文件变化时才执行
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend  # ↓ 以下步骤都在 frontend 目录跑
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: 20 }
+
+      - name: Install deps
+        run: npm ci          # lock 文件更快、更稳定
+
+      - name: Build
+        run: npm run build   # 产物 → frontend/dist
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: frontend/dist
+          publish_branch: gh-pages
