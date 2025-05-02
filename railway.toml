@@ -1,3 +1,5 @@
 [nixpacks]
 build.cmd = "npm ci --prefix backend"
 start.cmd = "npm start --prefix backend"
+[service]
+root = "backend"

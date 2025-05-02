@@ -6,14 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="8cbaf0f5-3b03-42c7-b3a8-70ce0bfb7f7a" name="Changes" comment="Initial commit">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/ models/Blog.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ models/Blog.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/ models/Message.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ models/Message.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/ models/Project.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ models/Project.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/blogRoutes.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/messageRoutes.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/projectRoutes.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/server.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,7 +128,23 @@
       <option name="project" value="LOCAL" />
       <updated>1746193281026</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1746195360910</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1746195360910</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1746195584060</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1746195584060</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
