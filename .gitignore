@@ -10,4 +10,4 @@ yarn-error.log*
 
 # Build 产物
 frontend/dist/
-app/dist/
+backend/dist/
