@@ -25,9 +25,9 @@ jobs:
       - run: npm run build
 
       # 发布到 gh-pages 分支
-      - name: Publish
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist            # build 输出目录
-          publish_branch: gh-pages     # 默认即可
+          publish_dir: ./frontend/dist      # ← 路径改对
+          publish_branch: gh-pages
