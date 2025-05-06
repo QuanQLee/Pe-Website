@@ -1,11 +1,9 @@
 name: Deploy frontend to GitHub Pages
 
-oon:
+on:
   push:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'           # 前端有改动时触发
-      - '.github/workflows/**'  # workflow 自身有改动也触发
+    branches: [main]            # 监听 main（或你惯用的分支）
+    paths: ['frontend/**']      # 只有前端目录有改动才触发
 
 jobs:
   build:
