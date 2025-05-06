@@ -7,16 +7,16 @@ export default function Home() {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    api.get('/blogs?limit=3').then(r => setLatestBlogs(r.data));
-    api.get('/projects?limit=3').then(r => setProjects(r.data));
+    api.get('/blogs?limit=3').then(r => setLatestBlogs(r.data)).catch(console.error);
+    api.get('/projects?limit=3').then(r => setProjects(r.data)).catch(console.error);
   }, []);
 
   return (
     <div className="space-y-10">
-      {/* blogs */}
+      {/* BLOG PREVIEW */}
       <section>
         <h2 className="text-2xl font-semibold mb-4">Latest Posts</h2>
-        <ul className="grid gap-4">
+        <ul className="grid gap-4 max-w-2xl">
           {latestBlogs.map(b => (
             <li key={b.slug} className="p-4 bg-white rounded-xl shadow">
               <Link to={`/blog/${b.slug}`} className="text-lg font-bold">
@@ -29,11 +29,11 @@ export default function Home() {
           ))}
         </ul>
         <Link to="/blog" className="inline-block mt-4 text-blue-600">
-          View all →
+          View&nbsp;all&nbsp;→
         </Link>
       </section>
 
-      {/* projects */}
+      {/* PROJECT PREVIEW */}
       <section>
         <h2 className="text-2xl font-semibold mb-4">Projects</h2>
         <ul className="grid md:grid-cols-3 gap-4">
@@ -47,7 +47,7 @@ export default function Home() {
           ))}
         </ul>
         <Link to="/projects" className="inline-block mt-4 text-blue-600">
-          View all →
+          View&nbsp;all&nbsp;→
         </Link>
       </section>
     </div>
