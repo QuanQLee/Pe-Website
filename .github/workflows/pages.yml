@@ -2,8 +2,13 @@ name: Deploy frontend to GitHub Pages
 
 on:
   push:
-    branches: [main]            # 监听 main（或你惯用的分支）
-    paths: ['frontend/**']      # 只有前端目录有改动才触发
+    branches: [main]              # 监听 main 分支
+    paths:
+      - 'frontend/**'             # 前端文件改动
+      - '.github/workflows/**'    # 或者 workflow 自己改动
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -23,5 +28,5 @@ jobs:
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist
+          publish_dir: ./frontend/dist     # ← 路径一定带 frontend
           publish_branch: gh-pages
