@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// 仓库名 = 你的 GitHub repo 名；末尾的斜杠别丢
 export default defineConfig({
   plugins: [react()],
-  base: '/test/'          // ⚠️ 若仓库名不同请修改
+  base: '/test/'          // ★ 改成你的仓库名
 });
-VITE_API_BASE=https://personal-site-production.up.railway.app/api
