@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const api = axios.create({
+export default axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE ||
-    'http://localhost:4000/api' // fallback for dev
+    'http://localhost:4000/api'
 });
-
-export default api;

@@ -1,14 +1,13 @@
-// frontend/vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';      // ← 纯粹一行 import，没有前缀符号
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/test/',                    // 仓库名
+  base: '/test/',
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src') // 别名
+      '@': resolve(__dirname, 'src')
     }
   }
 });

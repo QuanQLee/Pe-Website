@@ -1,24 +1,15 @@
-// src/components/ui/theme-provider.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-// 1) 建立上下文
-const ThemeCtx = createContext({
-  theme: 'light',
-  toggle: () => {}
-});
+const ThemeCtx = createContext({ theme: 'light', toggle: () => {} });
 
-// 2) 真正的 Provider
 export const ThemeProvider = ({ children }) => {
-  const getSysTheme = () =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-
+  const prefersDark = () =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
   const [theme, setTheme] = useState(() =>
-    localStorage.theme ? localStorage.theme : getSysTheme()
+    localStorage.theme || (prefersDark() ? 'dark' : 'light')
   );
+  const toggle = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
 
-  const toggle = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-
-  // 挂到 <html data-theme=""> 方便 Tailwind 的 class 选择器
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.theme = theme;
@@ -26,6 +17,4 @@ export const ThemeProvider = ({ children }) => {
 
   return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
 };
-
-// 3) Hook 供组件调用
 export const useTheme = () => useContext(ThemeCtx);

@@ -10,6 +10,16 @@ import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import {ThemeProvider} from '@/components/ui/theme-provider';
 
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
 export const ThemeCtx = createContext();
 
 export default function App() {
