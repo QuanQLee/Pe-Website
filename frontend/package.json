@@ -9,15 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@shadcn/ui": "latest",
     "axios": "^1.6.7",
+    "clsx": "^2.1.0",
+    "framer-motion": "^12.10.0",
+    "lucide-react": "^0.507.0",
+    "motion": "^12.10.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-router-dom": "^6.23.0",
     "react-markdown": "^9.0.3",
-    "lucide-react": "^0.364.0",
-    "@shadcn/ui": "latest",
-    "framer-motion": "^11.2.2",
-    "clsx": "^2.1.0"
+    "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
