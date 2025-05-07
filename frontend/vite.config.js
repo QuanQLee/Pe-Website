@@ -6,3 +6,9 @@ export default defineConfig({
   /* ⚠️ 仓库名一定要对，末尾斜杠不能少 */
   base: '/test/'
 });
+resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src') // 新增这一行
+    }
+  }
+});
