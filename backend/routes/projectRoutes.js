@@ -1,5 +1,6 @@
 import express from 'express';
 import Project from '../models/Project.js';
+import auth from '../auth.js';
 
 const router = express.Router();
 
@@ -15,15 +16,15 @@ router.get('/:id', async (req, res) => {
   project ? res.json(project) : res.status(404).json({ message: 'Not found' });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   res.status(201).json(await Project.create(req.body));
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   res.json(await Project.findByIdAndUpdate(req.params.id, req.body, { new: true }));
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   await Project.findByIdAndDelete(req.params.id);
   res.status(204).end();
 });

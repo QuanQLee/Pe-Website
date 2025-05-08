@@ -10,8 +10,9 @@
   },
   "dependencies": {
     "@shadcn/ui": "latest",
+    "@tailwindcss/typography": "^0.5.16",
     "axios": "^1.6.7",
-    "clsx": "^2.1.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.10.0",
     "lucide-react": "^0.507.0",
     "motion": "^12.10.0",

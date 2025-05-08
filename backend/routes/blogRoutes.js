@@ -1,5 +1,6 @@
 import express from 'express';
 import Blog from '../models/Blog.js';
+import auth from '../auth.js';      // ← 新增
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get('/:slug', async (req, res) => {
 });
 
 // 新建
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const blog = await Blog.create(req.body);
     res.status(201).json(blog);
@@ -35,13 +36,13 @@ router.post('/', async (req, res) => {
 });
 
 // 更新
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(blog);
 });
 
 // 删除
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   await Blog.findByIdAndDelete(req.params.id);
   res.status(204).end();
 });

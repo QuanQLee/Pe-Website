@@ -3,6 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
+import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
@@ -22,6 +23,7 @@ app.get('/', (_, res) => res.send('Personal-Site API running ✅'));
 app.use('/api/blogs',     blogRoutes);
 app.use('/api/projects',  projectRoutes);
 app.use('/api/messages',  messageRoutes);
+app.use('/api/auth', authRoutes);
 
 // 连接数据库并启动
 mongoose
