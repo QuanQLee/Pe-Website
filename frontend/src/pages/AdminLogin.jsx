@@ -3,6 +3,7 @@ import api from '../api';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminLogin() {
+  const [err, setErr] = useState('');
   const [username, setU] = useState('');
   const [password, setP] = useState('');
   const navigate = useNavigate();
@@ -12,8 +13,9 @@ export default function AdminLogin() {
     try {
       const { token } = (await api.post('/auth/login', { username, password })).data;
       localStorage.setItem('jwt', token);
-      navigate('/admin');              // ✓ HashRouter 下跳到 #/admin
-    } catch {
+      navigate('/admin');
+    } catch (error) {
+      console.error(error);
       setErr('Wrong credentials');
     }
   };
