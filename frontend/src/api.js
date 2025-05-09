@@ -5,8 +5,8 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(cfg => {
-  const jwt = localStorage.getItem('jwt');
-  if (jwt) cfg.headers.Authorization = `Bearer ${jwt}`;
+  const token = localStorage.getItem('jwt');
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
   return cfg;
 });
 

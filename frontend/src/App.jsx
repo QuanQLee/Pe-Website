@@ -1,8 +1,6 @@
-// src/App.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-
 import Home from './pages/Home';
 import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
@@ -16,17 +14,16 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="blog" element={<Blog />} />
-          <Route path="blog/:slug" element={<BlogDetail />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="projects/:id" element={<ProjectDetail />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="admin/login" element={<AdminLogin />} />
-          <Route path="admin" element={<AdminDashboard />} />
-          {/* 404 fallback */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
