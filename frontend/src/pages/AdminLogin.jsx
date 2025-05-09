@@ -4,21 +4,25 @@ import api from '../api';
 export default function AdminLogin() {
   const [username, setU] = useState('');
   const [password, setP] = useState('');
+  const [err, setErr]   = useState('');
+
   const submit = async e => {
     e.preventDefault();
     try {
       const { token } = (await api.post('/auth/login', { username, password })).data;
       localStorage.setItem('jwt', token);
-      location.href = '/admin';      // 登录后跳转
+      location.replace('/admin');
     } catch {
-      alert('Wrong credentials');
+      setErr('Wrong credentials');
     }
   };
 
   return (
-    <form onSubmit={submit} className="max-w-sm mx-auto mt-24 space-y-4">
-      <input value={username} onChange={e => setU(e.target.value)} placeholder="Username" className="input" />
-      <input value={password} onChange={e => setP(e.target.value)} type="password" placeholder="Password" className="input" />
+    <form onSubmit={submit} className="max-w-sm mx-auto mt-32 space-y-4 p-8 bg-white rounded-xl shadow">
+      <h2 className="text-2xl font-bold text-center">Admin Login</h2>
+      <input className="input" placeholder="Username" value={username} onChange={e=>setU(e.target.value)} />
+      <input className="input" type="password" placeholder="Password" value={password} onChange={e=>setP(e.target.value)} />
+      {err && <p className="text-red-500 text-sm">{err}</p>}
       <button className="btn-primary w-full">Login</button>
     </form>
   );
