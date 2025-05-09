@@ -12,10 +12,10 @@ dotenv.config();
 
 const app   = express();
 const PORT  = process.env.PORT || 4000;
-const ORIG  = process.env.CORS_ORIGIN?.split(',') || '*';
 
-// 中间件
-app.use(cors({ origin: ORIG }));
+// 1) 启用 CORS（允许所有来源；生产可以改成只允许你的 GH-Pages 域名）
+app.use(cors());
+ // 2) 解析 JSON
 app.use(express.json());
 
 // 路由
