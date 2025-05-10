@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../api'
 import EditModal from './EditModal'
 
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState('blogs')
   const [blogs, setBlogs] = useState([])
@@ -27,6 +28,12 @@ export default function AdminDashboard() {
     await api.delete(`/${type}s/${id}`)
     load()
   }
+
+// 保存成功后的回调：关闭弹窗并刷新列表
+const handleSaved = () => {
+  setModalProps({ open: false, type: '', initial: {} });
+  load();             // 重新拉取文章 / 项目
+};
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
