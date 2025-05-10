@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog } from '@headlessui/react';
+import React, { useState, useEffect } from 'react'
+import { Dialog } from '@headlessui/react'
 import MDEditor from '@uiw/react-md-editor';
 import { useDropzone } from 'react-dropzone';
 import api from '../api';
@@ -7,7 +7,7 @@ import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 
 export default function EditModal({
-  isOpen = false,
+  open = false  // open 一定要 boolean
   onClose,
   initial,
   type,      // 'blog' | 'project'
@@ -48,8 +48,10 @@ export default function EditModal({
     const payload = { title, slug, content };
     if (cover) payload.coverImage = cover;
 
-    if (initial?._id) {
-      await api.put(`/${type}s/${initial._id}`, payload);
+    // 后端主键是 _id
+    const id = initial?._id
+    if (id) {
+      await api.put(`/${type}s/${id}`, payload)
     } else {
       await api.post(`/${type}s`, payload);
     }
@@ -58,7 +60,7 @@ export default function EditModal({
   };
 
   return (
-    <Dialog open={openFlag} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
+    <Dialog open={open} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
       <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
       <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-2xl mx-4">

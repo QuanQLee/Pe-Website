@@ -151,12 +151,12 @@ export default function AdminDashboard() {
 
       {/* 关键：属性名要和 EditModal 一致 */}
       <EditModal
-        isOpen={modal.open}
-        type={modal.type}
-        initial={modal.data}
-        onClose={() => setModal({ open: false, type: '', data: null })}
-        onSaved={save}
-      />
+      open={modal.open}                        // ← 统一传 open
+      type={modal.type}                        // blog 或 project
+      initial={modal.data}                     // 空对象 or 当前项
+      onClose={() => setModal({ open: false, type: '', data: null })}
+      onSaved={save}                           // ← 保存后刷新
+    />
     </div>
   );
 }
