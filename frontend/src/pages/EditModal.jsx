@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Dialog } from '@headlessui/react'
 import MDEditor from '@uiw/react-md-editor'
 import { useDropzone } from 'react-dropzone'
-import api from './api'
+import api from '../api'
 import '@uiw/react-md-editor/markdown-editor.css'
 import '@uiw/react-markdown-preview/markdown.css'
 
