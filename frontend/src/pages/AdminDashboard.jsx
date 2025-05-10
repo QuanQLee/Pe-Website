@@ -2,100 +2,161 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import EditModal from './EditModal';
 
-const blogFields = [
-  { key:'title',  label:'Title' },
-  { key:'slug',   label:'Slug' },
-  { key:'content',label:'Content (markdown)' },
-  { key:'tags',   label:'Tags (, separated)' }
-];
-const projectFields=[
-  { key:'name',       label:'Name' },
-  { key:'tagline',    label:'Tagline' },
-  { key:'description',label:'Description' },
-  { key:'link',       label:'Link' },
-  { key:'image',      label:'Image URL' }
-];
+export default function AdminDashboard() {
+  const [tab, setTab] = useState('blogs');
+  const [blogs, setBlogs] = useState([]);
+  const [projects, setProjects] = useState([]);
+  // 用一个对象来管理弹窗的状态
+  const [modal, setModal] = useState({
+    open: false,
+    type: '',    // 'blog' 或 'project'
+    data: null,  // 当前编辑的数据
+  });
 
-export default function AdminDashboard(){
-  const [tab,setTab]=useState('blogs');
-  const [blogs,setBlogs]=useState([]);
-  const [projects,setProjects]=useState([]);
-  const [modal,setModal]=useState({open:false,type:'',data:null});
-
-  const load=()=>{
-    api.get('/blogs').then(r=>setBlogs(r.data));
-    api.get('/projects').then(r=>setProjects(r.data));
+  // 拉取列表
+  const load = () => {
+    api.get('/blogs').then(r => setBlogs(r.data));
+    api.get('/projects').then(r => setProjects(r.data));
   };
-  useEffect(load,[]);
+  useEffect(load, []);
 
-  const openNew=t=>setModal({open:true,type:t,data:{}});
-  const openEdit=(t,obj)=>setModal({open:true,type:t,data:obj});
+  // 新建 / 编辑
+  const openNew = t => setModal({ open: true, type: t, data: {} });
+  const openEdit = (t, obj) => setModal({ open: true, type: t, data: obj });
 
-  const save=async values=>{
-    const type=modal.type;
-    if(type==='blog'){
-      if(values._id) await api.put(`/blogs/${values._id}`,values);
-      else await api.post('/blogs',values);
-    }else{
-      if(values._id) await api.put(`/projects/${values._id}`,values);
-      else await api.post('/projects',values);
+  // 保存（新建或更新）
+  const save = async values => {
+    const t = modal.type;
+    if (t === 'blog') {
+      if (values._id) await api.put(`/blogs/${values._id}`, values);
+      else await api.post('/blogs', values);
+    } else {
+      if (values._id) await api.put(`/projects/${values._id}`, values);
+      else await api.post('/projects', values);
     }
-    setModal({open:false});
+    // 关闭弹窗并刷新列表
+    setModal({ open: false, type: '', data: null });
     load();
   };
 
-  const del=async (type,id)=>{
-    if(!confirm('Delete?'))return;
-    await api.delete(`/${type}s/${id}`);
+  // 删除
+  const del = async (t, id) => {
+    if (!confirm('确定要删除吗？')) return;
+    await api.delete(`/${t}s/${id}`);
     load();
   };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
-      <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
-      <div className="flex gap-4 mb-6">
-        <button className={tab==='blogs'?'tab-active':'tab'} onClick={()=>setTab('blogs')}>Blogs</button>
-        <button className={tab==='projects'?'tab-active':'tab'} onClick={()=>setTab('projects')}>Projects</button>
+      <h1 className="text-3xl font-bold">管理面板</h1>
+
+      <div className="flex gap-4">
+        <button
+          className={tab === 'blogs' ? 'btn-primary' : 'btn-outline'}
+          onClick={() => setTab('blogs')}
+        >
+          文章管理
+        </button>
+        <button
+          className={tab === 'projects' ? 'btn-primary' : 'btn-outline'}
+          onClick={() => setTab('projects')}
+        >
+          项目管理
+        </button>
       </div>
 
-      {tab==='blogs' && (
+      {tab === 'blogs' && (
         <>
-          <button className="btn-primary mb-4" onClick={()=>openNew('blog')}>New Blog</button>
-          <table className="w-full text-sm"><thead><tr><th>Title</th><th>Slug</th><th/></tr></thead><tbody>
-            {blogs.map(b=> (
-              <tr key={b._id} className="border-t"><td>{b.title}</td><td>{b.slug}</td>
-                <td className="text-right space-x-2">
-                  <button className="btn" onClick={()=>openEdit('blog',b)}>Edit</button>
-                  <button className="btn-danger" onClick={()=>del('blog',b._id)}>Del</button>
-                </td></tr>
-            ))}
-          </tbody></table>
+          <button
+            className="btn-primary mb-4"
+            onClick={() => openNew('blog')}
+          >
+            新建文章
+          </button>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                <th className="py-2">标题</th>
+                <th className="py-2">路径</th>
+                <th className="py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {blogs.map(b => (
+                <tr key={b._id} className="border-t">
+                  <td className="py-2">{b.title}</td>
+                  <td className="py-2">{b.slug}</td>
+                  <td className="py-2 text-right space-x-2">
+                    <button
+                      className="btn"
+                      onClick={() => openEdit('blog', b)}
+                    >
+                      编辑
+                    </button>
+                    <button
+                      className="btn-danger"
+                      onClick={() => del('blog', b._id)}
+                    >
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
 
-      {tab==='projects' && (
+      {tab === 'projects' && (
         <>
-          <button className="btn-primary mb-4" onClick={()=>openNew('project')}>New Project</button>
-          <table className="w-full text-sm"><thead><tr><th>Name</th><th>Tagline</th><th/></tr></thead><tbody>
-            {projects.map(p=> (
-              <tr key={p._id} className="border-t"><td>{p.name}</td><td>{p.tagline}</td>
-                <td className="text-right space-x-2">
-                  <button className="btn" onClick={()=>openEdit('project',p)}>Edit</button>
-                  <button className="btn-danger" onClick={()=>del('project',p._id)}>Del</button>
-                </td></tr>
-            ))}
-          </tbody></table>
+          <button
+            className="btn-primary mb-4"
+            onClick={() => openNew('project')}
+          >
+            新建项目
+          </button>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                <th className="py-2">名称</th>
+                <th className="py-2">简介</th>
+                <th className="py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map(p => (
+                <tr key={p._id} className="border-t">
+                  <td className="py-2">{p.name}</td>
+                  <td className="py-2">{p.tagline}</td>
+                  <td className="py-2 text-right space-x-2">
+                    <button
+                      className="btn"
+                      onClick={() => openEdit('project', p)}
+                    >
+                      编辑
+                    </button>
+                    <button
+                      className="btn-danger"
+                      onClick={() => del('project', p._id)}
+                    >
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
 
-     <EditModal
-       isOpen={modal.open}                         // ← 改成 isOpen
-       title={modal.data?._id ? '编辑' : '新增'}
-       type={modal.type}                           // ← 确保传了 type：'blog' 或 'project'
-       initial={modal.data}
-       onClose={() => setModal({ open: false, type: '', data: null })}
-       onSaved={save}                              // ← 改成 onSaved，与 EditModal 接口一致
-     />
+      {/* 关键：属性名要和 EditModal 一致 */}
+      <EditModal
+        isOpen={modal.open}
+        type={modal.type}
+        initial={modal.data}
+        onClose={() => setModal({ open: false, type: '', data: null })}
+        onSaved={save}
+      />
     </div>
   );
 }
