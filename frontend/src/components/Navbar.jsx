@@ -7,7 +7,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white dark:bg-gray-800 shadow">
       <div className="container mx-auto flex justify-between items-center p-4">
-        <div className="text-xl font-bold">我的网站</div>
+        <div className="text-xl font-bold">LI的网站</div>
         <div className="space-x-4">
           <NavLink to="/" className={({isActive}) => isActive ? active : normal}>首页</NavLink>
           <NavLink to="/blog" className={({isActive}) => isActive ? active : normal}>博客</NavLink>

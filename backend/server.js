@@ -33,3 +33,11 @@ mongoose
     app.listen(PORT, () => console.log(`✓ API listening on ${PORT}`));
   })
   .catch(err => console.error('✗ Mongo error', err));
+
+// server.js or uploadRoutes.js
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' });
+app.post('/api/upload', upload.single('file'), (req,res)=> {
+  // 返回文件访问 URL
+  res.json({ url: `https://yourdomain.com/uploads/${req.file.filename}` });
+});
