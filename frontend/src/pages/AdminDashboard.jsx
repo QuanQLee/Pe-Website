@@ -3,66 +3,75 @@ import api from '../api';
 import EditModal from './EditModal';
 
 export default function AdminDashboard() {
-  const [active, setActive] = useState('blog');      // 'blog' | 'project'
-  const [list, setList]     = useState([]);
-  const [modal, setModal]   = useState({ open:false, initial:{} });
+  const [tab,   setTab]   = useState('blog');            // blog｜project
+  const [list,  setList]  = useState([]);
+  const [modal, setModal] = useState({open:false, item:{}});
 
-  /* 拉取列表 */
-  const load = async () => {
-    const path = active === 'blog' ? '/blogs' : '/projects';
-    const { data } = await api.get(path);
-    setList(data);
+  /* 拉取列表；任何 404 / CORS 都不会白屏 */
+  const fetchList = async () => {
+    try {
+      const { data } = await api.get(tab === 'blog' ? '/blogs' : '/projects');
+      setList(Array.isArray(data) ? data : []);
+    } catch {
+      setList([]);
+    }
   };
-  useEffect(load, [active]);
-
-  /* 保存成功回调 */
-  const handleSaved = () => {
-    setModal({ open:false, initial:{} });
-    load();
-  };
+  useEffect(fetchList, [tab]);
 
   /* 删除 */
-  const del = async id => {
-    if (!confirm('确定删除吗？')) return;
-    await api.delete(`/${active}s/${id}`);
-    load();
+  const remove = async id => {
+    if (!confirm('确定删除？')) return;
+    await api.delete(`/${tab}s/${id}`);
+    fetchList();
   };
 
-  /* 列表行渲染 */
-  const Row = ({ item }) => (
-    <div className="flex justify-between border p-3 rounded">
-      <span>{active === 'blog' ? item.title : item.name}</span>
-      <div className="space-x-3">
-        <button onClick={()=>setModal({open:true, initial:item})}>✏️ 编辑</button>
-        <button onClick={()=>del(item._id)}>🗑️ 删除</button>
-      </div>
-    </div>
-  );
+  /* 保存成功 → 刷新 + 关弹窗 */
+  const handleSaved = () => {
+    setModal({open:false, item:{}});
+    fetchList();
+  };
 
   return (
-    <div className="p-6">
-      {/* Tab */}
-      <div className="space-x-4 mb-4">
-        <button className={active==='blog'?'tab-active':'tab'}    onClick={()=>setActive('blog')}>文章管理</button>
-        <button className={active==='project'?'tab-active':'tab'} onClick={()=>setActive('project')}>项目管理</button>
+    <div className="p-6 space-y-6">
+      {/* ---- TAB ---- */}
+      <div className="space-x-4">
+        {['blog','project'].map(t=>(
+          <button key={t}
+            onClick={()=>setTab(t)}
+            className={tab===t?'tab-active':'tab'}>
+            {t==='blog'?'文章管理':'项目管理'}
+          </button>
+        ))}
       </div>
 
-      {/* 列表 */}
-      <div className="space-y-2">
-        {list.map(item => <Row key={item._id} item={item} />)}
-        {list.length === 0 && <p className="text-gray-500">暂无数据</p>}
-      </div>
+      {/* ---- 列表 ---- */}
+      {list.length===0
+        ? <p className="text-gray-500">暂无数据</p>
+        : list.map(i=>(
+            <div key={i._id} className="flex justify-between border p-3 rounded">
+              <span>{tab==='blog'?i.title:i.name}</span>
+              <div className="space-x-3">
+                <button onClick={()=>setModal({open:true,item:i})}>✏️编辑</button>
+                <button onClick={()=>remove(i._id)}>🗑️删除</button>
+              </div>
+            </div>
+          ))
+      }
 
-      {/* 新建按钮 */}
-      <button onClick={()=>setModal({open:true, initial:{}})} className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full w-12 h-12 text-xl">＋</button>
+      {/* ---- 新建按钮 ---- */}
+      <button
+        onClick={()=>setModal({open:true,item:{}})}
+        className="fixed bottom-6 right-6 bg-blue-600 text-white w-12 h-12 rounded-full text-xl">
+        ＋
+      </button>
 
-      {/* 弹窗 */}
+      {/* ---- 弹窗 ---- */}
       <EditModal
         isOpen={modal.open}
-        initial={modal.initial}
-        type={active}
-        onClose={()=>setModal({open:false, initial:{}})}
+        onClose={()=>setModal({open:false,item:{}})}
         onSaved={handleSaved}
+        type={tab}
+        initial={modal.item}
       />
     </div>
   );
