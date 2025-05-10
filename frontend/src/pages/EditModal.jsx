@@ -7,7 +7,7 @@ import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 
 export default function EditModal({
-  open = false  // open 一定要 boolean
+  open = false,  // open 一定要 boolean
   onClose,
   initial,
   type,      // 'blog' | 'project'
