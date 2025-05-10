@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="8cbaf0f5-3b03-42c7-b3a8-70ce0bfb7f7a" name="Changes" comment="initial">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AdminDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AdminDashboard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/EditModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/EditModal.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,14 +66,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1745934549436</updated>
-    </task>
-    <task id="LOCAL-00018" summary="initial">
-      <option name="closed" value="true" />
-      <created>1746200368981</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1746200368981</updated>
     </task>
     <task id="LOCAL-00019" summary="initial">
       <option name="closed" value="true" />
@@ -457,7 +451,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746852687853</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="initial">
+      <option name="closed" value="true" />
+      <created>1746853190026</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1746853190026</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

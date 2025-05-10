@@ -44,13 +44,13 @@ export default function EditModal({
     const payload = { title, slug, content };
     if (cover) payload.coverImage = cover;
 
-    if (initial?.id) {
-      await api.put(`/${type}s/${initial.id}`, payload);
+    if (initial?._id) {                 // 用 _id
+      await api.put(`/${type}s/${initial._id}`, payload);
     } else {
       await api.post(`/${type}s`, payload);
     }
 
-    onSaved();
+    onSaved();          // 只发“已保存”信号
     onClose();
   };
 

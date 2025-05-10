@@ -21,20 +21,8 @@ export default function AdminDashboard() {
   const openEdit = (type, obj) =>
     setModalProps({ open: true, type, initial: obj })
 
-  const handleSave = async data => {
-    const { type } = modalProps
-    if (type === 'blog') {
-      if (data._id) await api.put(`/blogs/${data._id}`, data)
-      else await api.post('/blogs', data)
-    } else {
-      if (data._id) await api.put(`/projects/${data._id}`, data)
-      else await api.post('/projects', data)
-    }
-    setModalProps({ ...modalProps, open: false })
-    load()
-  }
 
-  const handleDelete = async (type, id) => {
+   const handleDelete = async (type, id) => {
     if (!confirm('确定要删除吗？')) return
     await api.delete(`/${type}s/${id}`)
     load()
@@ -147,7 +135,7 @@ export default function AdminDashboard() {
         onClose={() =>
           setModalProps({ open: false, type: '', initial: {} })
         }
-        onSaved={handleSave}
+        onSaved={handleSaved}
       />
     </div>
   )
