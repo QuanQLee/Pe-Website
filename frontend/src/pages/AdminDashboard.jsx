@@ -89,12 +89,12 @@ export default function AdminDashboard(){
       )}
 
       <EditModal
-        open={modal.open}
+        isOpen={modal.open}
         title={modal.data?._id?'Edit':'Create'}
         fields={modal.type==='blog'?blogFields:projectFields}
         initial={modal.data}
         onClose={()=>setModal({open:false})}
-        onSave={save}
+        onSaved={save}
       />
     </div>
   );

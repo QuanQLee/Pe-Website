@@ -7,7 +7,8 @@ import api from '../api'
 import '@uiw/react-md-editor/markdown-editor.css'
 import '@uiw/react-markdown-preview/markdown.css'
 
-export default function EditModal({ isOpen, onClose, initial, type, onSaved }) {
+export default function EditModal({ isOpen = false, onClose, initial, type, onSaved }) {
+  const openFlag = !!isOpen;  // 确保一定是 boolean
   // type = 'blog' | 'project'
   const [title, setTitle]     = useState(initial?.title || '')
   const [slug, setSlug]       = useState(initial?.slug  || '')
@@ -55,7 +56,7 @@ export default function EditModal({ isOpen, onClose, initial, type, onSaved }) {
   }
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
+    <Dialog open={openFlag} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
       <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
       <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-2xl mx-4">
