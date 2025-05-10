@@ -1,61 +1,62 @@
-import React, { useState, useEffect } from 'react'
-import { Dialog } from '@headlessui/react'
+// src/pages/EditModal.jsx
+import React, { useState, useEffect } from 'react';
+import { Dialog } from '@headlessui/react';
 import MDEditor from '@uiw/react-md-editor';
-import { useDropzone } from 'react-dropzone';
-import api from '../api';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
+import { useDropzone } from 'react-dropzone';
+import api from '../api';
 
 export default function EditModal({
-  open = false,  // open 一定要 boolean
+  open = false,          // 一定要布尔
   onClose,
-  initial,
-  type,      // 'blog' | 'project'
-  onSaved,   // 保存后的回调
+  initial = {},          // 默认空对象避免 undefined
+  type,                  // 'blog' or 'project'
+  onSaved,               // 保存后回调
 }) {
-  // 强制布尔
-  const openFlag = !!isOpen;
-
-  const [title, setTitle]     = useState(initial?.title || '');
-  const [slug, setSlug]       = useState(initial?.slug || '');
-  const [content, setContent] = useState(initial?.content || '');
-  const [cover, setCover]     = useState(initial?.coverImage || '');
+  // 本地表单状态
+  const [title, setTitle]     = useState(initial.title || '');
+  const [slug, setSlug]       = useState(initial.slug || '');
+  const [content, setContent] = useState(initial.content || '');
+  const [cover, setCover]     = useState(initial.coverImage || '');
 
   // 拖拽上传封面
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: 'image/*',
     maxFiles: 1,
     onDrop: files => {
-      setCover(URL.createObjectURL(files[0]));
+      const file = files[0];
+      // 本地预览
+      const previewUrl = URL.createObjectURL(file);
+      setCover(previewUrl);
+      // 上传到后端
       const fd = new FormData();
-      fd.append('file', files[0]);
+      fd.append('file', file);
       api.post('/upload', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }).then(r => setCover(r.data.url));
-    },
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }).then(res => {
+        setCover(res.data.url);
+      });
+    }
   });
 
-  // initial 变动时重置
+  // 当 initial 改变时，重置表单
   useEffect(() => {
-    setTitle(initial?.title || '');
-    setSlug(initial?.slug || '');
-    setContent(initial?.content || '');
-    setCover(initial?.coverImage || '');
+    setTitle(initial.title || '');
+    setSlug(initial.slug || '');
+    setContent(initial.content || '');
+    setCover(initial.coverImage || '');
   }, [initial]);
 
-  // 保存提交
   const handleSave = async () => {
-    const payload = { title, slug, content };
-    if (cover) payload.coverImage = cover;
-
-    // 后端主键是 _id
-    const id = initial?._id
+    const payload = { title, slug, content, coverImage: cover };
+    const id = initial._id;
     if (id) {
-      await api.put(`/${type}s/${id}`, payload)
+      await api.put(`/${type}s/${id}`, payload);
     } else {
       await api.post(`/${type}s`, payload);
     }
-    onSaved(payload);
+    onSaved();
     onClose();
   };
 
@@ -63,79 +64,73 @@ export default function EditModal({
     <Dialog open={open} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
       <Dialog.Overlay className="fixed inset-0 bg-black/30" />
 
-      <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-2xl mx-4">
-        <Dialog.Title className="text-2xl font-bold mb-4">
-          {initial?._id ? '编辑' : '新增'}{type === 'blog' ? '文章' : '项目'}
+      <div className="relative bg-white p-6 rounded-lg w-full max-w-2xl mx-4">
+        <Dialog.Title className="text-xl font-semibold mb-4">
+          {initial._id ? '编辑' : '新增'}{type === 'blog' ? '文章' : '项目'}
         </Dialog.Title>
 
-        {/* 标题 & Slug */}
-        <div className="mb-4 space-y-2">
+        <div className="space-y-4">
           <div>
-            <label className="block font-medium mb-1">标题</label>
+            <label className="block mb-1">标题</label>
             <input
-              type="text"
-              className="w-full border rounded px-3 py-2"
+              className="w-full border px-3 py-2 rounded"
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
           </div>
           <div>
-            <label className="block font-medium mb-1">路径 (slug)</label>
+            <label className="block mb-1">路径 (slug)</label>
             <input
-              type="text"
-              className="w-full border rounded px-3 py-2"
+              className="w-full border px-3 py-2 rounded"
               value={slug}
               onChange={e => setSlug(e.target.value)}
             />
           </div>
-        </div>
-
-        {/* 博文 Markdown 编辑器 */}
-        {type === 'blog' && (
-          <div className="mb-4" data-color-mode="light">
-            <MDEditor value={content} onChange={setContent} height={300} />
-          </div>
-        )}
-
-        {/* 项目描述 */}
-        {type === 'project' && (
-          <div className="mb-4">
-            <label className="block font-medium mb-1">描述</label>
-            <textarea
-              className="w-full border rounded px-3 py-2"
-              rows={6}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-            />
-          </div>
-        )}
-
-        {/* 封面图上传 */}
-        <div className="mb-6">
-          <label className="block font-medium mb-1">封面图片</label>
-          <div
-            {...getRootProps()}
-            className="border-2 border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:border-gray-400"
-          >
-            <input {...getInputProps()} />
-            {isDragActive ? '释放以上传' : '点击或拖拽图片到此处上传'}
-          </div>
-          {cover && (
-            <img src={cover} alt="封面预览" className="mt-3 w-full max-h-40 object-cover rounded" />
+          {type === 'blog' ? (
+            <div data-color-mode="light">
+              <label className="block mb-1">内容 (Markdown)</label>
+              <MDEditor height={300} value={content} onChange={setContent} />
+            </div>
+          ) : (
+            <div>
+              <label className="block mb-1">简介</label>
+              <textarea
+                className="w-full border px-3 py-2 rounded"
+                rows={5}
+                value={content}
+                onChange={e => setContent(e.target.value)}
+              />
+            </div>
           )}
+          <div>
+            <label className="block mb-1">封面图</label>
+            <div
+              {...getRootProps()}
+              className="border border-dashed rounded p-4 text-center cursor-pointer hover:border-gray-400"
+            >
+              <input {...getInputProps()} />
+              {isDragActive ? '释放以上传' : '点击或拖拽图片此处'}
+            </div>
+            {cover && (
+              <img
+                src={cover}
+                alt="封面预览"
+                className="mt-3 w-full h-40 object-cover rounded"
+              />
+            )}
+          </div>
         </div>
 
-        {/* 按钮 */}
-        <div className="flex justify-end space-x-3">
+        <div className="mt-6 flex justify-end space-x-2">
           <button
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
             onClick={onClose}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
           >
             取消
           </button>
           <button
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
             onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             保存
           </button>
