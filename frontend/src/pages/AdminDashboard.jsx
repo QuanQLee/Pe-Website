@@ -1,149 +1,68 @@
-import { useState, useEffect } from 'react'
-import api from '../api'
-import EditModal from './EditModal'
-
+// src/pages/AdminDashboard.jsx  —— 仅展示核心逻辑
+import React, { useEffect, useState } from 'react';
+import api from '../api';
+import EditModal from './EditModal';
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('blogs')
-  const [blogs, setBlogs] = useState([])
-  const [projects, setProjects] = useState([])
-  // modalProps.open 一定是 boolean，type 要么 'blog' 要么 'project'
-  const [modalProps, setModalProps] = useState({ open: false, type: '', initial: {} })
+  const [active, setActive] = useState('blog');   // blog | project
+  const [list,   setList]   = useState([]);
+  const [modal,  setModal]  = useState({ open:false, initial:{} });
 
-  // 加载数据
-  const load = () => {
-    api.get('/blogs').then(r => setBlogs(r.data))
-    api.get('/projects').then(r => setProjects(r.data))
-  }
-  useEffect(load, [])
+  const load = async () => {
+    const { data } = await api.get(active === 'blog' ? '/blogs' : '/projects');
+    setList(data);
+  };
+  useEffect(load, [active]);
 
-  const openNew = type =>
-    setModalProps({ open: true, type, initial: {} })
-  const openEdit = (type, obj) =>
-    setModalProps({ open: true, type, initial: obj })
+  /* ⚠️ 关键：保存完成后的统一回调 —— 关闭弹窗 + 重新拉列表 */
+  const handleSaved = () => {
+    setModal({ open:false, initial:{} });
+    load();
+  };
 
-
-   const handleDelete = async (type, id) => {
-    if (!confirm('确定要删除吗？')) return
-    await api.delete(`/${type}s/${id}`)
-    load()
-  }
-
-// 保存成功后的回调：关闭弹窗并刷新列表
-const handleSaved = () => {
-  setModalProps({ open: false, type: '', initial: {} });
-  load();             // 重新拉取文章 / 项目
-};
+  /* 删除 */
+  const del = async id => {
+    if (!confirm('确定删除？')) return;
+    await api.delete(`/${active}s/${id}`);
+    load();
+  };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
-      <h1 className="text-3xl font-bold">管理面板</h1>
-
-      <div className="flex space-x-4">
-        <button
-          className={tab === 'blogs' ? 'btn-active' : 'btn'}
-          onClick={() => setTab('blogs')}
-        >
-          文章
-        </button>
-        <button
-          className={tab === 'projects' ? 'btn-active' : 'btn'}
-          onClick={() => setTab('projects')}
-        >
-          项目
-        </button>
+    <div className="p-6">
+      {/* Tab 切换 */}
+      <div className="space-x-4 mb-4">
+        <button onClick={()=>setActive('blog')}    className={active==='blog'    ? 'tab-active':'tab'}>文章管理</button>
+        <button onClick={()=>setActive('project')} className={active==='project' ? 'tab-active':'tab'}>项目管理</button>
       </div>
 
-      {tab === 'blogs' && (
-        <>
-          <button
-            className="btn-primary"
-            onClick={() => openNew('blog')}
-          >
-            新建文章
-          </button>
-          <table className="w-full table-auto text-left mt-4">
-            <thead>
-              <tr>
-                <th className="p-2">标题</th>
-                <th className="p-2">Slug</th>
-                <th className="p-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {blogs.map(b => (
-                <tr key={b._id} className="border-t">
-                  <td className="p-2">{b.title}</td>
-                  <td className="p-2">{b.slug}</td>
-                  <td className="p-2 space-x-2 text-right">
-                    <button className="btn" onClick={() => openEdit('blog', b)}>
-                      编辑
-                    </button>
-                    <button
-                      className="btn-danger"
-                      onClick={() => handleDelete('blog', b._id)}
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      {/* 列表 */}
+      <div className="space-y-2">
+        {list.map(item => (
+          <div key={item._id} className="flex justify-between border p-3 rounded">
+            <span>{active==='blog' ? item.title : item.name}</span>
+            <div className="space-x-3">
+              <button onClick={()=>setModal({open:true, initial:item})}>✏️ 编辑</button>
+              <button onClick={()=>del(item._id)}>🗑️ 删除</button>
+            </div>
+          </div>
+        ))}
+        {list.length===0 && <p className="text-gray-500">暂无数据</p>}
+      </div>
 
-      {tab === 'projects' && (
-        <>
-          <button
-            className="btn-primary"
-            onClick={() => openNew('project')}
-          >
-            新建项目
-          </button>
-          <table className="w-full table-auto text-left mt-4">
-            <thead>
-              <tr>
-                <th className="p-2">名称</th>
-                <th className="p-2">Tagline</th>
-                <th className="p-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map(p => (
-                <tr key={p._id} className="border-t">
-                  <td className="p-2">{p.name}</td>
-                  <td className="p-2">{p.tagline}</td>
-                  <td className="p-2 space-x-2 text-right">
-                    <button
-                      className="btn"
-                      onClick={() => openEdit('project', p)}
-                    >
-                      编辑
-                    </button>
-                    <button
-                      className="btn-danger"
-                      onClick={() => handleDelete('project', p._id)}
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      {/* 新建按钮 */}
+      <button
+        onClick={()=>setModal({open:true, initial:{}})}
+        className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full w-12 h-12 text-xl"
+      >＋</button>
 
+      {/* 弹窗编辑 */}
       <EditModal
-        isOpen={modalProps.open}
-        type={modalProps.type}
-        initial={modalProps.initial}
-        onClose={() =>
-          setModalProps({ open: false, type: '', initial: {} })
-        }
-        onSaved={handleSaved}
+        isOpen={modal.open}
+        initial={modal.initial}
+        type={active === 'blog' ? 'blog' : 'project'}
+        onClose={()=>setModal({ open:false, initial:{} })}
+        onSaved={handleSaved}     // ← 现在它确实存在
       />
     </div>
-  )
+  );
 }
