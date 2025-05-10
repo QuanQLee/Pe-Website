@@ -3,6 +3,12 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import EditModal from './EditModal';
 
+  /* ⚠️ 关键：保存完成后的统一回调 —— 关闭弹窗 + 重新拉列表 */
+  const handleSaved = () => {
+    setModal({ open:false, initial:{} });
+    load();
+  };
+
 export default function AdminDashboard() {
   const [active, setActive] = useState('blog');   // blog | project
   const [list,   setList]   = useState([]);
@@ -14,11 +20,6 @@ export default function AdminDashboard() {
   };
   useEffect(load, [active]);
 
-  /* ⚠️ 关键：保存完成后的统一回调 —— 关闭弹窗 + 重新拉列表 */
-  const handleSaved = () => {
-    setModal({ open:false, initial:{} });
-    load();
-  };
 
   /* 删除 */
   const del = async id => {
