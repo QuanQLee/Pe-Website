@@ -88,14 +88,14 @@ export default function AdminDashboard(){
         </>
       )}
 
-      <EditModal
-        isOpen={modal.open}
-        title={modal.data?._id?'Edit':'Create'}
-        fields={modal.type==='blog'?blogFields:projectFields}
-        initial={modal.data}
-        onClose={()=>setModal({open:false})}
-        onSaved={save}
-      />
+     <EditModal
+       isOpen={modal.open}                         // ← 改成 isOpen
+       title={modal.data?._id ? '编辑' : '新增'}
+       type={modal.type}                           // ← 确保传了 type：'blog' 或 'project'
+       initial={modal.data}
+       onClose={() => setModal({ open: false, type: '', data: null })}
+       onSaved={save}                              // ← 改成 onSaved，与 EditModal 接口一致
+     />
     </div>
   );
 }
