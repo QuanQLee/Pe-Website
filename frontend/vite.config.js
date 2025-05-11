@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  base: '/test/',            // 和你 gh-pages 的子路径保持一致
   plugins: [react()],
-  base: '/test/' // ← 记得替换为你的仓库名, 前后斜杠保留
-});
+})

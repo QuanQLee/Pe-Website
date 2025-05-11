@@ -1,172 +1,128 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   getPaginationRowModel,
-  flexRender,
+  getSortedRowModel,
 } from '@tanstack/react-table';
-import api from '../api';
-import EditModal from './EditModal';
 import clsx from 'clsx';
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('blog');   // blog | project
-  const [rows, setRows] = useState(null);   // null=loading, []=empty, [{}]=data
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
+  const [tab, setTab] = useState('blog');   // 'blog' | 'project'
+  const [data, setData] = useState([]);
 
-  /* ---------- 读取列表 ---------- */
-  const fetchList = async (t = tab) => {
-    const path = t === 'blog' ? '/blogs' : '/projects';
-    const { data } = await api.get(path);
+  /** 拉取列表 */
+  useEffect(() => {
+    const fetchList = async () => {
+      const url = `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}`;
+      const res = await fetch(url, { credentials: 'include' });
+      setData(await res.json());
+    };
+    fetchList();
+  }, [tab]);
 
-    // 确保最终一定是数组
-    const list = Array.isArray(data)
-      ? data
-      : data.blogs || data.projects || data.data || [];
-    setRows(list);
+  /** 删除 */
+  const handleDelete = async (id) => {
+    if (!confirm('确定删除？')) return;
+    await fetch(
+      `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}/${id}`,
+      { method: 'DELETE', credentials: 'include' },
+    );
+    setData((d) => d.filter((item) => item._id !== id));
   };
-  useEffect(() => { fetchList(); }, [tab]);
 
-  /* ---------- 表头定义 ---------- */
-  const columns = useMemo(() => [
-    {
-      id: 'title',                                        // ★ 必须有 id
-      header: tab === 'blog' ? 'Title' : 'Name',
-      accessorFn: r => r.title || r.name,
-      cell: info => info.getValue(),                      // ★ 必须有 cell
-    },
-    {
-      header: 'Date',
-      accessorKey: 'createdAt',
-      cell: info => new Date(info.getValue()).toLocaleDateString(),
-    },
-    {
-      id: 'action',
-      header: 'Action',
-      cell: info => {
-        const row = info.row.original;
-        return (
-          <div className="space-x-1">
-            <button
-              onClick={() => { setEditing(row); setModalOpen(true); }}
-              className="btn-outline text-xs">✏︎
-            </button>
-            <button
-              onClick={() => handleDelete(row._id)}
-              className="btn-danger text-xs">🗑
-            </button>
-          </div>
-        );
+  /** 列定义 */
+  const columns = useMemo(
+    () => [
+      { accessorKey: 'title', header: tab === 'blog' ? '标题' : '名称' },
+      {
+        accessorFn: (row) => new Date(row.createdAt).toLocaleDateString(),
+        header: '日期',
       },
-    },
-  ], [tab]);
+      {
+        id: 'actions',
+        header: '操作',
+        cell: ({ row }) => (
+          <div className="space-x-2">
+            <button onClick={() => alert('TODO: 编辑弹框')}>编辑</button>
+            <button onClick={() => handleDelete(row.original._id)}>删除</button>
+          </div>
+        ),
+      },
+    ],
+    [tab],
+  );
 
-  /* ---------- react-table 实例 ---------- */
   const table = useReactTable({
-    data: rows || [],           // loading 时传空数组
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 8 } },
   });
 
-  /* ---------- CRUD ---------- */
-  const handleDelete = async id => {
-    if (!confirm('Delete?')) return;
-    const path = tab === 'blog' ? '/blogs' : '/projects';
-    await api.delete(`${path}/${id}`);
-    fetchList();
-  };
-  const handleSave = async form => {
-    const path = tab === 'blog' ? '/blogs' : '/projects';
-    if (editing?._id) await api.put(`${path}/${editing._id}`, form);
-    else               await api.post(path, form);
-    setModalOpen(false);
-    fetchList();
-  };
-
-  /* ---------- 组件渲染 ---------- */
   return (
-    <div className="max-w-5xl mx-auto mt-10 px-2">
-      {/* 切换标签 & 新建按钮 */}
-      <div className="flex gap-4 mb-6 items-center">
-        {['blog', 'project'].map(t => (
-          <button key={t}
+    <div className="p-8">
+      {/* 顶部切换与新增 */}
+      <div className="mb-4 space-x-4">
+        {['blog', 'project'].map((t) => (
+          <button
+            key={t}
             onClick={() => setTab(t)}
-            className={clsx('px-4 py-2 rounded-lg',
-              t === tab ? 'bg-blue-600 text-white' : 'bg-gray-200')}>
+            className={clsx(
+              'px-4 py-2 rounded',
+              tab === t ? 'bg-blue-500 text-white' : 'bg-gray-200',
+            )}
+          >
             {t === 'blog' ? 'Posts' : 'Projects'}
           </button>
         ))}
         <button
-          onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="ml-auto btn-primary">＋ New
+          onClick={() => alert('TODO: 新建弹框')}
+          className="ml-4 px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          + New
         </button>
       </div>
 
-      {/* loading / 列表 / 空状态 */}
-      {rows === null ? (
-        <p className="text-gray-500">Loading…</p>
-      ) : rows.length === 0 ? (
-        <p className="text-gray-500">暂无{tab === 'blog' ? '文章' : '项目'}，点击右上角 New 新建。</p>
-      ) : (
-        <>
-          <table className="w-full border collapse text-gray-800">
-            <thead className="bg-gray-100">
-              {table.getHeaderGroups().map(hg => (
-                <tr key={hg.id}>
-                  {hg.headers.map(h => (
-                    <th key={h.id}
-                        className="p-2 cursor-pointer select-none"
-                        onClick={h.column.getToggleSortingHandler()}>
-                      {flexRender(h.column.columnDef.header, h.getContext())}
-                      {{asc:' 🔼',desc:' 🔽'}[h.column.getIsSorted()] || ''}
-                    </th>
-                  ))}
-                </tr>
+      {/* 表格 */}
+      <table className="w-full border-collapse">
+        <thead>
+          {table.getHeaderGroups().map((hg) => (
+            <tr key={hg.id}>
+              {hg.headers.map((h) => (
+                <th key={h.id} className="border p-2">
+                  {h.isPlaceholder ? null : h.column.columnDef.header}
+                </th>
               ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(r => (
-                <tr key={r.id} className="border-t">
-                  {r.getVisibleCells().map(c => (
-                    <td key={c.id} className="p-2">
-                      {flexRender(c.column.columnDef.cell, c.getContext())}
-                    </td>
-                  ))}
-                </tr>
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id} className="border p-2">
+                  {cell.renderValue()}
+                </td>
               ))}
-            </tbody>
-          </table>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-          {/* 分页 */}
-          {table.getPageCount() > 1 && (
-            <div className="flex justify-end mt-3 space-x-2">
-              <button onClick={() => table.previousPage()}
-                      disabled={!table.getCanPreviousPage()}
-                      className="btn-outline text-xs">Prev</button>
-              <span className="text-sm self-center">
-                {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
-              </span>
-              <button onClick={() => table.nextPage()}
-                      disabled={!table.getCanNextPage()}
-                      className="btn-outline text-xs">Next</button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* 编辑 / 新建弹窗 */}
-      <EditModal
-        open={modalOpen}
-        setOpen={setModalOpen}
-        type={tab}
-        initData={editing}
-        onSave={handleSave}
-      />
+      {/* 分页 */}
+      <div className="mt-4 space-x-2">
+        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+          上一页
+        </button>
+        <span>
+          {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+        </span>
+        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+          下一页
+        </button>
+      </div>
     </div>
   );
 }
