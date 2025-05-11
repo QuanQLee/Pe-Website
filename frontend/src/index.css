@@ -3,3 +3,9 @@
 @tailwind utilities;
 
 /* 你自己的全局样式可继续写在下面 */
+
+/* index.css 里补充 */
+.input       { @apply border rounded-lg px-3 py-2 w-full; }
+.btn-primary { @apply bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg; }
+.btn-outline { @apply border px-3 py-1 rounded-lg; }
+.btn-danger  { @apply bg-red-500 hover:bg-red-400 text-white px-3 py-1 rounded-lg; }
