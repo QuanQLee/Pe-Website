@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   /* table 列定义 ----------------------------------------------------- */
   const columns = useMemo(() => [
     {
+      id: 'title',                          // ★ 添加 id
       header: tab === 'blog' ? 'Title' : 'Name',
       accessorFn: row => row.title || row.name,
     },
