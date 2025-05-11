@@ -6,6 +6,7 @@ import {
   getSortedRowModel,
 } from '@tanstack/react-table';
 import clsx from 'clsx';
+import api from '../api';
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('blog');   // 'blog' | 'project'
@@ -14,9 +15,13 @@ export default function AdminDashboard() {
   /** 拉取列表 */
   useEffect(() => {
     const fetchList = async () => {
-      const url = `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}`;
-      const res = await fetch(url, { credentials: 'include' });
-      setData(await res.json());
+      try {
+        const route = tab === 'blog' ? 'blogs' : 'projects';
+        const res = await api.get(`/${route}`);
+        setData(res.data);
+      } catch (err) {
+        console.error('列表拉取失败', err);
+      }
     };
     fetchList();
   }, [tab]);
@@ -24,11 +29,13 @@ export default function AdminDashboard() {
   /** 删除 */
   const handleDelete = async (id) => {
     if (!confirm('确定删除？')) return;
-    await fetch(
-      `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}/${id}`,
-      { method: 'DELETE', credentials: 'include' },
-    );
-    setData((d) => d.filter((item) => item._id !== id));
+    try {
+      const route = tab === 'blog' ? 'blogs' : 'projects';
+      await api.delete(`/${route}/${id}`);
+      setData((prev) => prev.filter(item => item._id !== id));
+    } catch (err) {
+      console.error('删除失败', err);
+    }
   };
 
   /** 列定义 */
