@@ -1,83 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog } from '@headlessui/react';
-import MDEditor from '@uiw/react-md-editor';
-import { useDropzone } from 'react-dropzone';
-import api from '../api';
-import '@uiw/react-md-editor/markdown-editor.css';
-import '@uiw/react-markdown-preview/markdown.css';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment, useState, useEffect } from 'react';
 
-export default function EditModal({ isOpen, onClose, initial={}, type, onSaved }) {
-  const isBlog = type === 'blog';
-  const [title, setTitle] = useState('');
-  const [slug, setSlug]   = useState('');
-  const [content, setContent] = useState('');
-  const [cover, setCover]     = useState('');
+export default function EditModal({ open, setOpen, initData, type, onSave }) {
+  const [form, setForm] = useState(initData || {});
 
-  /* 同步初始值 */
-  useEffect(()=>{
-    setTitle(initial.title || initial.name || '');
-    setSlug(initial.slug || '');
-    setContent(initial.content || initial.description || '');
-    setCover(initial.coverImage || '');
-  }, [initial]);
+  useEffect(() => setForm(initData || {}), [initData]);
 
-  /* 图片上传 */
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
-    maxFiles: 1,
-    onDrop: async files => {
-      const fd = new FormData();
-      fd.append('file', files[0]);
-      const { data } = await api.post('/upload', fd);
-      setCover(data.url);
-    }
-  });
+  const handle = k => e => setForm({ ...form, [k]: e.target.value });
 
-  /* 保存 */
-  const save = async () => {
-    const payload = isBlog
-      ? { title, slug, content, coverImage: cover }
-      : { name: title, tagline: slug, description: content, coverImage: cover };
-
-    if (initial._id) await api.put(`/${type}s/${initial._id}`, payload);
-    else await api.post(`/${type}s`, payload);
-
-    onSaved();
-  };
+  const fields =
+    type === 'blog'
+      ? [
+          ['title', 'Title'],
+          ['slug', 'Slug'],
+          ['content', 'Content', true],
+          ['tags', 'Tags (comma)']
+        ]
+      : [
+          ['name', 'Name'],
+          ['tagline', 'Tagline'],
+          ['description', 'Description', true],
+          ['link', 'Link'],
+          ['image', 'Image URL']
+        ];
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
-      <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4" data-color-mode="light">
-        <Dialog.Title className="text-xl font-bold mb-4">{initial._id ? '编辑' : '新增'} {isBlog?'文章':'项目'}</Dialog.Title>
+    <Transition appear show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-20" onClose={() => setOpen(false)}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+          leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/30" />
+        </Transition.Child>
 
-        {/* 标题与 slug/tagline */}
-        <div className="mb-4 space-y-2">
-          <input className="w-full border rounded px-3 py-2" placeholder="标题" value={title} onChange={e=>setTitle(e.target.value)} />
-          <input className="w-full border rounded px-3 py-2" placeholder={isBlog?'Slug':'项目副标题'} value={slug} onChange={e=>setSlug(e.target.value)} />
-        </div>
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+              leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-lg transform rounded-2xl bg-white p-6 space-y-4 shadow-xl">
+                <Dialog.Title className="text-lg font-semibold">
+                  {initData ? 'Edit' : 'New'} {type === 'blog' ? 'Post' : 'Project'}
+                </Dialog.Title>
 
-        {/* 内容编辑 */}
-        {isBlog ? (
-          <MDEditor value={content} onChange={setContent} height={300} />
-        ) : (
-          <textarea className="w-full border rounded px-3 py-2 mb-4" rows={6} value={content} onChange={e=>setContent(e.target.value)} />
-        )}
+                {fields.map(([k, label, multiline]) =>
+                  multiline ? (
+                    <textarea key={k} rows={6} placeholder={label} value={form[k] || ''} onChange={handle(k)}
+                      className="input w-full" />
+                  ) : (
+                    <input key={k} placeholder={label} value={form[k] || ''} onChange={handle(k)}
+                      className="input w-full" />
+                  )
+                )}
 
-        {/* 封面上传 */}
-        <div className="mb-4">
-          <div {...getRootProps({ className:'border-2 border-dashed rounded p-4 text-center cursor-pointer hover:border-gray-400' })}>
-            <input {...getInputProps()} />
-            {isDragActive ? '释放以上传' : '点击或拖拽上传封面图片'}
+                <div className="flex justify-end gap-2 pt-2">
+                  <button onClick={() => setOpen(false)} className="btn-outline">Cancel</button>
+                  <button onClick={() => onSave(form)} className="btn-primary">Save</button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
-          {cover && <img src={cover} alt="cover" className="mt-3 max-h-40 object-cover rounded" />}
         </div>
-
-        <div className="flex justify-end space-x-3 mt-4">
-          <button className="px-4 py-2 bg-gray-200 rounded" onClick={onClose}>取消</button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={save}>保存</button>
-        </div>
-      </div>
-    </Dialog>
+      </Dialog>
+    </Transition>
   );
 }

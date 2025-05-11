@@ -1,90 +1,87 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import api from '../api';
 import EditModal from './EditModal';
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('blogs');
-  const [blogs, setBlogs] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [tab, setTab] = useState('blog');    // 'blog' | 'project'
+  const [list, setList] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [editItem, setEdit] = useState(null);
 
-  const fetchData = async () => {
-    try {
-      const [bResp, pResp] = await Promise.all([
-        axios.get(import.meta.env.VITE_API_BASE + '/blogs'),
-        axios.get(import.meta.env.VITE_API_BASE + '/projects'),
-      ]);
-      setBlogs(bResp.data);
-      setProjects(pResp.data);
-    } catch (err) {
-      console.error(err);
+  const load = async () => {
+    const path = tab === 'blog' ? '/blogs' : '/projects';
+    const data = (await api.get(path)).data;
+    setList(data);
+  };
+
+  useEffect(() => { load(); }, [tab]);
+
+  const save = async data => {
+    const path = tab === 'blog' ? '/blogs' : '/projects';
+    if (editItem?._id) {
+      await api.put(`${path}/${editItem._id}`, data);
+    } else {
+      await api.post(path, data);
+    }
+    setOpen(false);
+    load();
+  };
+
+  const del = async id => {
+    const path = tab === 'blog' ? '/blogs' : '/projects';
+    if (confirm('Delete?')) {
+      await api.delete(`${path}/${id}`);
+      load();
     }
   };
-
-  useEffect(() => { fetchData(); }, []);
-
-  const handleEdit = item => {
-    setEditing(item);
-    setModalOpen(true);
-  };
-
-  const handleCreate = () => {
-    setEditing({});
-    setModalOpen(true);
-  };
-
-  const handleSave = async (type, data) => {
-    try {
-      if (data._id) {
-        await axios.put(`${import.meta.env.VITE_API_BASE}/${type}/${data._id}`, data);
-      } else {
-        await axios.post(`${import.meta.env.VITE_API_BASE}/${type}`, data);
-      }
-      setModalOpen(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const items = tab === 'blogs' ? blogs : projects;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">后台管理</h1>
-      <div className="flex space-x-4 mb-4">
-        <button onClick={() => setTab('blogs')} className={tab==='blogs'?'font-semibold':'text-gray-600'}>文章</button>
-        <button onClick={() => setTab('projects')} className={tab==='projects'?'font-semibold':'text-gray-600'}>项目</button>
+    <div className="max-w-4xl mx-auto mt-10">
+      <div className="flex gap-4 mb-6">
+        {['blog', 'project'].map(t => (
+          <button key={t}
+            className={clsx('px-4 py-2 rounded-lg', t === tab ? 'bg-blue-600 text-white' : 'bg-gray-200')}
+            onClick={() => setTab(t)}
+          >
+            {t === 'blog' ? 'Posts' : 'Projects'}
+          </button>
+        ))}
+        <button onClick={() => { setEdit(null); setOpen(true); }}
+          className="ml-auto btn-primary">＋ New</button>
       </div>
-      <button onClick={handleCreate} className="mb-4 px-3 py-1 bg-blue-500 text-white rounded">新建{tab==='blogs'?'文章':'项目'}</button>
-      <table className="min-w-full bg-white">
-        <thead>
+
+      <table className="w-full border collapse">
+        <thead className="bg-gray-100 text-left">
           <tr>
-            <th className="px-4 py-2">标题</th>
-            <th className="px-4 py-2">操作</th>
+            <th className="p-2 w-1/2">Title / Name</th>
+            <th className="p-2">Date</th>
+            <th className="p-2 w-24">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {items.map(item => (
-            <tr key={item._id} className="hover:bg-gray-100">
-              <td className="border px-4 py-2">{item.title}</td>
-              <td className="border px-4 py-2">
-                <button onClick={() => handleEdit({...item, type: tab})} className="px-2 py-1 bg-green-500 text-white rounded">编辑</button>
+          {list.map(item => (
+            <tr key={item._id} className="border-t">
+              <td className="p-2">{item.title || item.name}</td>
+              <td className="p-2">{new Date(item.createdAt).toLocaleDateString()}</td>
+              <td className="p-2 space-x-2">
+                <button onClick={() => { setEdit(item); setOpen(true); }}
+                  className="btn-outline text-sm">✏︎</button>
+                <button onClick={() => del(item._id)}
+                  className="btn-danger text-sm">🗑</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {modalOpen && (
-        <EditModal
-          type={tab}
-          item={editing}
-          onClose={() => setModalOpen(false)}
-          onSave={data => handleSave(tab, data)}
-        />
-      )}
+      <EditModal
+        open={open}
+        setOpen={setOpen}
+        initData={editItem}
+        type={tab}
+        onSave={save}
+      />
     </div>
   );
 }
