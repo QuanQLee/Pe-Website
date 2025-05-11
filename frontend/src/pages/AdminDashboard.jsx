@@ -1,37 +1,41 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import clsx from 'clsx';
 import api from '../api';
 import EditModal from './EditModal';
+import clsx from 'clsx';
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('blog');  // blog | project
-  const [data, setData] = useState([]);
-  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState('blog');   // blog | project
+  const [rows, setRows] = useState(null);   // null=loading, []=empty, [{}]=data
+  const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  /* 读取列表 --------------------------------------------------------- */
-  const fetchList = async t => {
+  /* ---------- 读取列表 ---------- */
+  const fetchList = async (t = tab) => {
     const path = t === 'blog' ? '/blogs' : '/projects';
     const { data } = await api.get(path);
-    setData(Array.isArray(data) ? data : data.blogs || data.projects || data.data || []);
 
+    // 确保最终一定是数组
+    const list = Array.isArray(data)
+      ? data
+      : data.blogs || data.projects || data.data || [];
+    setRows(list);
   };
-  useEffect(() => { fetchList(tab); }, [tab]);
+  useEffect(() => { fetchList(); }, [tab]);
 
-  /* table 列定义 ----------------------------------------------------- */
+  /* ---------- 表头定义 ---------- */
   const columns = useMemo(() => [
     {
-      id: 'title',                          // ★ 添加 id
+      id: 'title',                                        // ★ 必须有 id
       header: tab === 'blog' ? 'Title' : 'Name',
-      accessorFn: row => row.title || row.name,
-      cell: info => info.getValue(),          // ← ★ 让内容真正渲染
+      accessorFn: r => r.title || r.name,
+      cell: info => info.getValue(),                      // ★ 必须有 cell
     },
     {
       header: 'Date',
@@ -46,7 +50,7 @@ export default function AdminDashboard() {
         return (
           <div className="space-x-1">
             <button
-              onClick={() => { setEditing(row); setOpen(true); }}
+              onClick={() => { setEditing(row); setModalOpen(true); }}
               className="btn-outline text-xs">✏︎
             </button>
             <button
@@ -59,9 +63,9 @@ export default function AdminDashboard() {
     },
   ], [tab]);
 
-  /* react-table 实例 -------------------------------------------------- */
+  /* ---------- react-table 实例 ---------- */
   const table = useReactTable({
-    data,
+    data: rows || [],           // loading 时传空数组
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -69,25 +73,25 @@ export default function AdminDashboard() {
     initialState: { pagination: { pageSize: 8 } },
   });
 
-  /* CRUD ------------------------------------------------------------- */
+  /* ---------- CRUD ---------- */
   const handleDelete = async id => {
     if (!confirm('Delete?')) return;
-    await api.delete(`${tab === 'blog' ? '/blogs' : '/projects'}/${id}`);
-    fetchList(tab);
+    const path = tab === 'blog' ? '/blogs' : '/projects';
+    await api.delete(`${path}/${id}`);
+    fetchList();
   };
-
   const handleSave = async form => {
     const path = tab === 'blog' ? '/blogs' : '/projects';
     if (editing?._id) await api.put(`${path}/${editing._id}`, form);
     else               await api.post(path, form);
-    setOpen(false);
-    fetchList(tab);
+    setModalOpen(false);
+    fetchList();
   };
 
-  /* 组件返回 --------------------------------------------------------- */
+  /* ---------- 组件渲染 ---------- */
   return (
     <div className="max-w-5xl mx-auto mt-10 px-2">
-      {/* tabs & new */}
+      {/* 切换标签 & 新建按钮 */}
       <div className="flex gap-4 mb-6 items-center">
         {['blog', 'project'].map(t => (
           <button key={t}
@@ -98,17 +102,19 @@ export default function AdminDashboard() {
           </button>
         ))}
         <button
-          onClick={() => { setEditing(null); setOpen(true); }}
+          onClick={() => { setEditing(null); setModalOpen(true); }}
           className="ml-auto btn-primary">＋ New
         </button>
       </div>
 
-      {/* table / 空状态 */}
-      {data.length === 0 ? (
+      {/* loading / 列表 / 空状态 */}
+      {rows === null ? (
+        <p className="text-gray-500">Loading…</p>
+      ) : rows.length === 0 ? (
         <p className="text-gray-500">暂无{tab === 'blog' ? '文章' : '项目'}，点击右上角 New 新建。</p>
       ) : (
         <>
-          <table className="w-full border collapse">
+          <table className="w-full border collapse text-gray-800">
             <thead className="bg-gray-100">
               {table.getHeaderGroups().map(hg => (
                 <tr key={hg.id}>
@@ -136,7 +142,7 @@ export default function AdminDashboard() {
             </tbody>
           </table>
 
-          {/* pagination */}
+          {/* 分页 */}
           {table.getPageCount() > 1 && (
             <div className="flex justify-end mt-3 space-x-2">
               <button onClick={() => table.previousPage()}
@@ -153,10 +159,10 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {/* edit modal */}
+      {/* 编辑 / 新建弹窗 */}
       <EditModal
-        open={open}
-        setOpen={setOpen}
+        open={modalOpen}
+        setOpen={setModalOpen}
         type={tab}
         initData={editing}
         onSave={handleSave}
