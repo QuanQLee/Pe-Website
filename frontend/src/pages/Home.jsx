@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import api from '../api';
 
 // 左侧文章/项目，右侧展示一到两张图片
-const galleryImages = ['/images/pic1.jpg', '/images/pic2.jpg'];
+const galleryImages = ['images/pic1.jpg', 'images/pic2.jpg'];
 
 export default function Home() {
   const [blogs, setBlogs] = useState([]);
