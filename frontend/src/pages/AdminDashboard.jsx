@@ -31,6 +31,7 @@ export default function AdminDashboard() {
       id: 'title',                          // ★ 添加 id
       header: tab === 'blog' ? 'Title' : 'Name',
       accessorFn: row => row.title || row.name,
+      cell: info => info.getValue(),          // ← ★ 让内容真正渲染
     },
     {
       header: 'Date',
