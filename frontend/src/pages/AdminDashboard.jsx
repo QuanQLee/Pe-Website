@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     ;(async () => {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}`
+        `${import.meta.env.VITE_API_BASE}/${tab === 'blog' ? 'blogs' : 'projects'}`
       )
       const list = await res.json()
       setData(list)
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   // ② 提交新建或编辑
   const handleSubmit = async e => {
     e.preventDefault()
-    const endpoint = `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}`
+    const endpoint = `${import.meta.env.VITE_API_BASE}/${tab === 'blog' ? 'blogs' : 'projects'}`
     const payload =
       tab === 'blog'
         ? { title: formState.title, content: formState.content }
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   const handleDelete = async id => {
     if (!window.confirm('确定删除？')) return
     await fetch(
-      `${import.meta.env.VITE_API_URL}/${tab === 'blog' ? 'blogs' : 'projects'}/${id}`,
+      `${import.meta.env.VITE_API_BASE}/${tab === 'blog' ? 'blogs' : 'projects'}/${id}`,
       { method: 'DELETE' }
     )
     setData(d => d.filter(item => item._id !== id))
