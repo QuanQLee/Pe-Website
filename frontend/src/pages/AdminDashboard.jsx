@@ -13,7 +13,12 @@ export default function AdminDashboard() {
   const load = async (type = tab) => {
     const path = type === 'blog' ? '/blogs' : '/projects';
     const { data } = await api.get(path);
-    setList(data);
+    // 既兼容数组也兼容 {blogs:[…]} / {projects:[…]}
+    const arr =
+      Array.isArray(data)
+        ? data
+        : data.blogs || data.projects || data.data || [];
+    setList(arr);
   };
 
   // ‼️ 首次渲染也拉一次
