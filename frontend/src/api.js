@@ -4,9 +4,10 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:4000/api'
 });
 
+// frontend/src/api.js
 api.interceptors.request.use(cfg => {
-  const token = localStorage.getItem('jwt');
-  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  const t = localStorage.getItem('token');
+  if (t) cfg.headers.Authorization = `Bearer ${t}`;
   return cfg;
 });
 
