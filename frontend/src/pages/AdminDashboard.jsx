@@ -1,78 +1,90 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import axios from 'axios';
 import EditModal from './EditModal';
 
 export default function AdminDashboard() {
-  const [tab,   setTab]   = useState('blog');            // blog｜project
-  const [list,  setList]  = useState([]);
-  const [modal, setModal] = useState({open:false, item:{}});
+  const [tab, setTab] = useState('blogs');
+  const [blogs, setBlogs] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [editing, setEditing] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  /* 拉取列表；任何 404 / CORS 都不会白屏 */
-  const fetchList = async () => {
+  const fetchData = async () => {
     try {
-      const { data } = await api.get(tab === 'blog' ? '/blogs' : '/projects');
-      setList(Array.isArray(data) ? data : []);
-    } catch {
-      setList([]);
+      const [bResp, pResp] = await Promise.all([
+        axios.get(import.meta.env.VITE_API_BASE + '/blogs'),
+        axios.get(import.meta.env.VITE_API_BASE + '/projects'),
+      ]);
+      setBlogs(bResp.data);
+      setProjects(pResp.data);
+    } catch (err) {
+      console.error(err);
     }
   };
-  useEffect(fetchList, [tab]);
 
-  /* 删除 */
-  const remove = async id => {
-    if (!confirm('确定删除？')) return;
-    await api.delete(`/${tab}s/${id}`);
-    fetchList();
+  useEffect(() => { fetchData(); }, []);
+
+  const handleEdit = item => {
+    setEditing(item);
+    setModalOpen(true);
   };
 
-  /* 保存成功 → 刷新 + 关弹窗 */
-  const handleSaved = () => {
-    setModal({open:false, item:{}});
-    fetchList();
+  const handleCreate = () => {
+    setEditing({});
+    setModalOpen(true);
   };
+
+  const handleSave = async (type, data) => {
+    try {
+      if (data._id) {
+        await axios.put(`${import.meta.env.VITE_API_BASE}/${type}/${data._id}`, data);
+      } else {
+        await axios.post(`${import.meta.env.VITE_API_BASE}/${type}`, data);
+      }
+      setModalOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const items = tab === 'blogs' ? blogs : projects;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* ---- TAB ---- */}
-      <div className="space-x-4">
-        {['blog','project'].map(t=>(
-          <button key={t}
-            onClick={()=>setTab(t)}
-            className={tab===t?'tab-active':'tab'}>
-            {t==='blog'?'文章管理':'项目管理'}
-          </button>
-        ))}
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">后台管理</h1>
+      <div className="flex space-x-4 mb-4">
+        <button onClick={() => setTab('blogs')} className={tab==='blogs'?'font-semibold':'text-gray-600'}>文章</button>
+        <button onClick={() => setTab('projects')} className={tab==='projects'?'font-semibold':'text-gray-600'}>项目</button>
       </div>
+      <button onClick={handleCreate} className="mb-4 px-3 py-1 bg-blue-500 text-white rounded">新建{tab==='blogs'?'文章':'项目'}</button>
+      <table className="min-w-full bg-white">
+        <thead>
+          <tr>
+            <th className="px-4 py-2">标题</th>
+            <th className="px-4 py-2">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(item => (
+            <tr key={item._id} className="hover:bg-gray-100">
+              <td className="border px-4 py-2">{item.title}</td>
+              <td className="border px-4 py-2">
+                <button onClick={() => handleEdit({...item, type: tab})} className="px-2 py-1 bg-green-500 text-white rounded">编辑</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-      {/* ---- 列表 ---- */}
-      {list.length===0
-        ? <p className="text-gray-500">暂无数据</p>
-        : list.map(i=>(
-            <div key={i._id} className="flex justify-between border p-3 rounded">
-              <span>{tab==='blog'?i.title:i.name}</span>
-              <div className="space-x-3">
-                <button onClick={()=>setModal({open:true,item:i})}>✏️编辑</button>
-                <button onClick={()=>remove(i._id)}>🗑️删除</button>
-              </div>
-            </div>
-          ))
-      }
-
-      {/* ---- 新建按钮 ---- */}
-      <button
-        onClick={()=>setModal({open:true,item:{}})}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white w-12 h-12 rounded-full text-xl">
-        ＋
-      </button>
-
-      {/* ---- 弹窗 ---- */}
-      <EditModal
-        isOpen={modal.open}
-        onClose={()=>setModal({open:false,item:{}})}
-        onSaved={handleSaved}
-        type={tab}
-        initial={modal.item}
-      />
+      {modalOpen && (
+        <EditModal
+          type={tab}
+          item={editing}
+          onClose={() => setModalOpen(false)}
+          onSave={data => handleSave(tab, data)}
+        />
+      )}
     </div>
   );
 }
