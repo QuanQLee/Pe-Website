@@ -20,7 +20,8 @@ export default function AdminDashboard() {
   const fetchList = async t => {
     const path = t === 'blog' ? '/blogs' : '/projects';
     const { data } = await api.get(path);
-    setData(Array.isArray(data) ? data : data.blogs || data.projects || []);
+    setData(Array.isArray(data) ? data : data.blogs || data.projects || data.data || []);
+
   };
   useEffect(() => { fetchList(tab); }, [tab]);
 
