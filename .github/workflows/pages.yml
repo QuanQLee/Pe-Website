@@ -1,13 +1,13 @@
-name: Deploy frontend to GitHub Pages
-
+name: Build and deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write   # for OIDC
+  contents: read          # 仅拉取仓库
+  pages: write            # 发布到 gh-pages
+  id-token: write         # OIDC
 
 jobs:
   build:
@@ -18,20 +18,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
 
-      - name: Install deps
-        run: npm ci
-        working-directory: ./frontend
+      - run: npm ci
+      - run: npm run build      # vite build → dist
 
-      - name: Build
-        run: npm run build
-        working-directory: ./frontend
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v1
+      # 把 dist 上传成 artifact，供下一 job 部署
+      - uses: actions/upload-pages-artifact@v2
         with:
-          path: ./frontend/dist
+          path: ./dist          # vite 的输出目录
 
   deploy:
     needs: build
@@ -39,7 +33,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
