@@ -23,7 +23,7 @@ jobs:
       - run: npm run build      # vite build → dist
 
       # 把 dist 上传成 artifact，供下一 job 部署
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v2
         with:
           path: ./dist          # vite 的输出目录
 
