@@ -1,21 +1,58 @@
-# pages.yml
-steps:
-  - uses: actions/checkout@v4
+name: Deploy frontend to GitHub Pages
 
-  - name: Use Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: 18
+on:
+  push:
+    branches: [ main ]       # 你主分支叫 main
+  workflow_dispatch:         # 手动触发
 
-  - name: Install
-    working-directory: ./frontend     # ← 关键
-    run: npm ci
+permissions:
+  pages: write
+  id-token: write
 
-  - name: Build
-    working-directory: ./frontend     # ← 关键
-    run: npm run build
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend   # 关键：所有 npm 操作都在 frontend
 
-  - name: Upload artifact
-    uses: actions/upload-pages-artifact@v2
-    with:
-      path: ./frontend/dist           # ← 指向 Vite 输出
+    steps:
+      # 1️⃣ 拉代码
+      - uses: actions/checkout@v4
+
+      # 2️⃣ 设置 Node
+      - name: Use Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      # 3️⃣ 安装依赖
+      - name: Install
+        run: npm ci
+
+      # 4️⃣ 构建（Vite 会自动读取 .env.production）
+      - name: Build
+        run: npm run build      # 即 vite build，输出到 frontend/dist
+
+      # 5️⃣ 上传静态文件作为 artifact
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
