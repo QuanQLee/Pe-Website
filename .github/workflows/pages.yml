@@ -1,32 +1,21 @@
-name: Deploy frontend to GitHub Pages
+# pages.yml
+steps:
+  - uses: actions/checkout@v4
 
-on:
-  push:
-    branches: [main]              # 监听 main 分支
-    paths:
-      - 'frontend/**'             # 前端文件改动
-      - '.github/workflows/**'    # 或者 workflow 自己改动
+  - name: Use Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: 18
 
-permissions:
-  contents: write
+  - name: Install
+    working-directory: ./frontend     # ← 关键
+    run: npm ci
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
+  - name: Build
+    working-directory: ./frontend     # ← 关键
+    run: npm run build
 
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-
-      - run: npm ci
-      - run: npm run build
-
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist     # ← 路径一定带 frontend
-          publish_branch: gh-pages
+  - name: Upload artifact
+    uses: actions/upload-pages-artifact@v2
+    with:
+      path: ./frontend/dist           # ← 指向 Vite 输出
