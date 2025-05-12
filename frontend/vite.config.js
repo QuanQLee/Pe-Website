@@ -1,10 +1,7 @@
-// vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
 export default defineConfig({
-  base: '/test/',
   plugins: [react()],
-  build: {
-    outDir: 'dist'
-  }
-})
+  base: '/test/',               // ★ 加这一行，仓库名
+});
