@@ -1,14 +1,4 @@
-name: Build and deploy to GitHub Pages
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-permissions:
-  contents: read          # 仅拉取仓库
-  pages: write            # 发布到 gh-pages
-  id-token: write         # OIDC
-
+# .github/workflows/pages.yml
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,22 +9,16 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm ci
-      - run: npm run build      # vite build → dist
+      # 👉 在 frontend 目录安装依赖
+      - name: Install deps
+        run: npm ci --prefix frontend
 
-      # 把 dist 上传成 artifact，供下一 job 部署
-      - uses: actions/upload-pages-artifact@v2
+      # 👉 执行 Vite 构建
+      - name: Build
+        run: npm run build --prefix frontend
+
+      # 复制 dist 内容到 pages-artifact
+      - name: Upload build
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist          # vite 的输出目录
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+          path: frontend/dist
