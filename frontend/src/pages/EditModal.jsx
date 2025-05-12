@@ -1,141 +1,78 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  flexRender,
-} from '@tanstack/react-table';
-import clsx from 'clsx';
-import api from '../api';
-import EditModal from './EditModal';
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import ReactQuill from "react-quill";
+import clsx from "clsx";
 
-/* 表格列定义 */
-const makeColumns = tab => [
-  {
-    header: tab === 'blog' ? '标题' : '名称',
-    accessorKey: tab === 'blog' ? 'title' : 'name',
-  },
-  { header: '日期', accessorFn: row => new Date(row.createdAt).toLocaleDateString() },
-  {
-    header: '操作',
-    cell: ({ row, table }) => (
-      <>
-        <button onClick={() => table.options.meta.edit(row.original)} className="btn-outline text-sm mr-2">✏︎</button>
-        <button onClick={() => table.options.meta.del(row.original._id)} className="btn-danger text-sm">🗑</button>
-      </>
-    ),
-  },
-];
+export default function EditModal({ open, setOpen, initData, type, onSave }) {
+  const [form, setForm] = useState(initData || {});
+  const [file, setFile] = useState(null);
+  const fileRef = useRef();
 
-export default function AdminDashboard() {
-  const [tab, setTab] = useState('blog');   // blog | project
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModal] = useState(false);
-  const [editing, setEditing] = useState(null);
+  useEffect(() => {
+    setForm(initData || {});
+    setFile(null);
+  }, [initData]);
 
-  /* 拉列表 */
-  const fetchList = async t => {
-    setLoading(true);
-    const r = await api.get(t === 'blog' ? '/blogs' : '/projects');
-    const arr = Array.isArray(r.data) ? r.data : r.data.blogs || r.data.projects || [];
-    setData(arr);
-    setLoading(false);
-  };
-  useEffect(() => { fetchList(tab); }, [tab]);
+  const handle = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
-  /* 新建/编辑/删除 */
-  const save = async form => {
-    const path = tab === 'blog' ? '/blogs' : '/projects';
-    editing?._id
-      ? await api.put(`${path}/${editing._id}`, form)
-      : await api.post(path, form);
-    setModal(false);
-    fetchList(tab);
-  };
-  const del = async id => {
-    if (!confirm('Delete?')) return;
-    await api.delete(`${tab === 'blog' ? '/blogs' : '/projects'}/${id}`);
-    fetchList(tab);
-  };
+  const commonFields = [
+    ["title", "标题"],
+    ["slug", "Slug"],
+    ["content", "内容", true],
+  ];
+  const projectFields = [
+    ["name", "名称"],
+    ["tagline", "Tagline"],
+    ["description", "描述", true],
+    ["link", "链接"],
+  ];
 
-  /* react-table 实例 */
-  const columns = useMemo(() => makeColumns(tab), [tab]);
-  const table = useReactTable({
-    data,
-    columns,
-    state: { pagination: { pageSize: 10 } },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    meta: { edit: r => { setEditing(r); setModal(true); }, del },
-  });
+  const fields = type === "blog" ? commonFields : projectFields;
 
   return (
-    <div className="max-w-6xl mx-auto mt-12">
-      {/* Tab + New */}
-      <div className="flex gap-4 mb-6">
-        {['blog', 'project'].map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={clsx('px-4 py-2 rounded-lg',
-              t === tab ? 'bg-blue-600 text-white' : 'bg-gray-200')}>
-            {t === 'blog' ? 'Posts' : 'Projects'}
-          </button>
-        ))}
-        <button onClick={() => { setEditing(null); setModal(true); }}
-          className="ml-auto btn-primary">＋ New</button>
-      </div>
+    <Transition appear show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-20" onClose={() => setOpen(false)}>
+        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+          <div className="fixed inset-0 bg-black/30" />
+        </Transition.Child>
 
-      {/* 表格 */}
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(hg => (
-              <tr key={hg.id}>
-                {hg.headers.map(h => (
-                  <th key={h.id} className="p-3 text-left">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                  </th>
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+              <Dialog.Panel className="w-full max-w-3xl transform rounded-2xl bg-white p-6 space-y-4 shadow-xl">
+                <Dialog.Title className="text-lg font-semibold mb-2">{initData ? "编辑" : "新建"} {type === "blog" ? "文章" : "项目"}</Dialog.Title>
+
+                {fields.map(([key, label, rich]) => rich ? (
+                  <div key={key} className="space-y-1">
+                    <label className="font-medium text-sm text-gray-700">{label}</label>
+                    <ReactQuill theme="snow" value={form[key] || ""} onChange={v => handle(key, v)} />
+                  </div>
+                ) : (
+                  <input key={key} className="input" placeholder={label} value={form[key] || ""} onChange={e => handle(key, e.target.value)} />
                 ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={3} className="p-6 text-center text-gray-400">加载中…</td></tr>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <tr><td colSpan={3} className="p-6 text-center text-gray-400">暂无数据</td></tr>
-            ) : table.getRowModel().rows.map(r => (
-              <tr key={r.id} className="border-t hover:bg-gray-50">
-                {r.getVisibleCells().map(c => (
-                  <td key={c.id} className="p-3">
-                    {flexRender(c.column.columnDef.cell ?? c.column.columnDef.accessorFn, c.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
-      {/* 分页 */}
-      <div className="flex items-center gap-4 mt-4">
-        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}
-          className="btn-outline">上一页</button>
-        <span>{table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</span>
-        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}
-          className="btn-outline">下一页</button>
-      </div>
+                {/* 上传图片 (仅项目) */}
+                {type === "project" && (
+                  <div className="space-y-1">
+                    <label className="font-medium text-sm text-gray-700">项目封面</label>
+                    <input ref={fileRef} type="file" accept="image/*" className="block" onChange={e => setFile(e.target.files[0])} />
+                    {(file || form.image) && (
+                      <img src={file ? URL.createObjectURL(file) : form.image} alt="preview" className="h-32 object-cover rounded" />
+                    )}
+                  </div>
+                )}
 
-      {/* 弹窗编辑 */}
-      <EditModal
-        open={modalOpen}
-        setOpen={setModal}
-        initData={editing}
-        type={tab}
-        onSave={save}
-      />
-    </div>
+                {/* 保存 / 取消 */}
+                <div className="flex justify-end gap-3 pt-3">
+                  <button className="btn-outline" onClick={() => setOpen(false)}>取消</button>
+                  <button className={clsx("btn-primary", !form.title && !form.name && "opacity-40 pointer-events-none")}
+                    onClick={() => onSave(form, file)}>保存</button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
   );
 }
