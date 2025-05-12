@@ -2,35 +2,42 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+
 import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
-mongoose.connect(process.env.MONGODB_URI);
 
-const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN.split(',') }));
+const app   = express();
+const PORT  = process.env.PORT || 4000;
+
+// 1) 启用 CORS（允许所有来源；生产可以改成只允许你的 GH-Pages 域名）
+app.use(cors());
+ // 2) 解析 JSON
 app.use(express.json());
 
-/* ---------- 文件上传：保存到 /uploads 并返回 URL ---------- */
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const upload = multer({ dest: path.join(__dirname, 'uploads') });
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  res.json({ url });
-});
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-/* ---------- 业务路由 ---------- */
+// 路由
+app.get('/', (_, res) => res.send('Personal-Site API running ✅'));
+app.use('/api/blogs',     blogRoutes);
+app.use('/api/projects',  projectRoutes);
+app.use('/api/messages',  messageRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/blogs', blogRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/messages', messageRoutes);
 
-app.listen(process.env.PORT || 4000, () =>
-  console.log('Server on', process.env.PORT || 4000));
+// 连接数据库并启动
+mongoose
+  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('✓ MongoDB connected');
+    app.listen(PORT, () => console.log(`✓ API listening on ${PORT}`));
+  })
+  .catch(err => console.error('✗ Mongo error', err));
+
+// server.js or uploadRoutes.js
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' });
+app.post('/api/upload', upload.single('file'), (req,res)=> {
+  // 返回文件访问 URL
+  res.json({ url: `https://yourdomain.com/uploads/${req.file.filename}` });
+});
