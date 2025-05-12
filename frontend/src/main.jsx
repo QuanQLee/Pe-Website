@@ -1,3 +1,4 @@
+import "react-quill/dist/quill.snow.css";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter as Router } from 'react-router-dom';  // ★ 1. 用 HashRouter
