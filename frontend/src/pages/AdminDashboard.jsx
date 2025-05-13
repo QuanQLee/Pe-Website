@@ -10,113 +10,88 @@ import clsx from 'clsx';
 import api from '../api';
 import EditModal from './EditModal';
 
-/* 表格列定义 */
-const makeColumns = tab => [
-  {
-    header: tab === 'blog' ? '标题' : '名称',
-    accessorKey: tab === 'blog' ? 'title' : 'name',
-  },
-  {
-    header: '日期',
-    accessorFn: row => new Date(row.createdAt).toLocaleDateString(),
-  },
-  {
-    header: '操作',
-    cell: ({ row, table }) => (
-      <>
-        <button
-          onClick={() => {
-            table.options.meta.onEdit(row.original);
-          }}
-          className="btn-outline text-sm mr-2"
-        >
-          ✏︎
-        </button>
-        <button
-          onClick={() => {
-            table.options.meta.onDelete(row.original._id);
-          }}
-          className="btn-danger text-sm"
-        >
-          🗑
-        </button>
-      </>
-    ),
-  },
-];
-
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('blog'); // 'blog' | 'project'
+  const [tab, setTab] = useState('blog');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  // 拉列表
+  // fetch list whenever tab changes or after save/delete
+  const fetchList = async () => {
+    setLoading(true);
+    const url = tab === 'blog' ? '/blogs' : '/projects';
+    const res = await api.get(url);
+    const list = Array.isArray(res.data) ? res.data : [];
+    setData(list);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const res = await api.get(tab === 'blog' ? '/blogs' : '/projects');
-      // 如果后端直接返回数组，则用它；否则尝试解包
-      const list = Array.isArray(res.data)
-        ? res.data
-        : res.data.blogs || res.data.projects || [];
-      setData(list);
-      setLoading(false);
-    })();
+    fetchList();
   }, [tab]);
 
-  // 新建 / 编辑 保存
-  const handleSave = async form => {
+  // Save (create or update)
+  const handleSave = async (form) => {
     const base = tab === 'blog' ? '/blogs' : '/projects';
-    if (editing?._id) {
-      await api.put(`${base}/${editing._id}`, form);
+    if (editing && (editing._id || editing.slug)) {
+      // update
+      const idOrSlug = editing._id || editing.slug;
+      await api.put(`${base}/${idOrSlug}`, form);
     } else {
+      // create
       await api.post(base, form);
     }
     setModalOpen(false);
     setEditing(null);
-    // 重新拉一遍
-    const fresh = await api.get(tab === 'blog' ? '/blogs' : '/projects');
-    setData(Array.isArray(fresh.data) ? fresh.data : []);
+    fetchList();
   };
 
-  // 删除
-  const handleDelete = async id => {
-    if (!confirm('确认要删除吗？')) return;
-    await api.delete(`${tab === 'blog' ? '/blogs' : '/projects'}/${id}`);
-    setData(data.filter(item => (item._id || item.slug || item.id) !== id));
+  // Delete
+  const handleDelete = async (orig) => {
+    const idOrSlug = orig._id || orig.slug;
+    if (!confirm('确认删除此条记录？')) return;
+    const base = tab === 'blog' ? '/blogs' : '/projects';
+    await api.delete(`${base}/${idOrSlug}`);
+    setData((prev) => prev.filter((it) => (it._id || it.slug) !== idOrSlug));
   };
 
-  // 表格实例
-  const columns = useMemo(() => makeColumns(tab), [tab]);
+  // columns
+  const columns = useMemo(
+    () => [
+      { header: tab === 'blog' ? '标题' : '名称', accessorKey: tab === 'blog' ? 'title' : 'name' },
+      { header: '日期', accessorFn: (row) => new Date(row.createdAt).toLocaleDateString() },
+      {
+        header: '操作',
+        cell: ({ row }) => (
+          <>
+            <button onClick={() => { setEditing(row.original); setModalOpen(true); }} className="btn-outline mr-2">✏︎</button>
+            <button onClick={() => handleDelete(row.original)} className="btn-danger">🗑</button>
+          </>
+        ),
+      },
+    ],
+    [tab]
+  );
+
+  // table instance
   const table = useReactTable({
     data,
     columns,
+    state: { pagination: { pageIndex: 0, pageSize: 10 } },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: { pageSize: 10 } },
-    meta: {
-      onEdit: row => {
-        setEditing(row);
-        setModalOpen(true);
-      },
-      onDelete: handleDelete,
-    },
   });
 
   return (
     <div className="max-w-6xl mx-auto mt-12">
-      {/* Tab + New */}
+      {/* Tabs & New */}
       <div className="flex gap-4 mb-6">
-        {['blog', 'project'].map(t => (
+        {['blog', 'project'].map((t) => (
           <button
             key={t}
-            onClick={() => {
-              setTab(t);
-              setEditing(null);
-            }}
+            onClick={() => { setTab(t); setEditing(null); }}
             className={clsx('px-4 py-2 rounded-lg', {
               'bg-blue-600 text-white': t === tab,
               'bg-gray-200': t !== tab,
@@ -126,23 +101,20 @@ export default function AdminDashboard() {
           </button>
         ))}
         <button
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
+          onClick={() => { setEditing(null); setModalOpen(true); }}
           className="ml-auto btn-primary"
         >
           ＋ New
         </button>
       </div>
 
-      {/* 表格 */}
+      {/* Table */}
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full border-collapse">
           <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {hg.headers.map(h => (
+                {hg.headers.map((h) => (
                   <th key={h.id} className="p-3 text-left">
                     {flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
@@ -164,14 +136,11 @@ export default function AdminDashboard() {
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map((row) => (
                 <tr key={row.id} className="border-t hover:bg-gray-50">
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="p-3">
-                      {flexRender(
-                        cell.column.columnDef.cell ?? cell.column.columnDef.accessorFn,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell ?? cell.column.columnDef.accessorFn, cell.getContext())}
                     </td>
                   ))}
                 </tr>
@@ -181,40 +150,28 @@ export default function AdminDashboard() {
         </table>
       </div>
 
-      {/* 分页 */}
+      {/* Pagination */}
       <div className="flex items-center gap-4 mt-4">
-        <button
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          className="btn-outline"
-        >
+        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} className="btn-outline">
           上一页
         </button>
         <span>
-          {table.getState().pagination.pageIndex + 1} /{' '}
-          {table.getPageCount()}
+          {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
         </span>
-        <button
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          className="btn-outline"
-        >
+        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} className="btn-outline">
           下一页
         </button>
       </div>
 
-      {/* 弹窗编辑 */}
+      {/* Edit Modal */}
       {modalOpen && (
         <EditModal
           type={tab}
-          initialForm={editing}
+          initialForm={editing || {}}
           onSave={handleSave}
-          onCancel={() => {
-            setModalOpen(false);
-            setEditing(null);
-          }}
+          onCancel={() => { setModalOpen(false); setEditing(null); }}
         />
       )}
     </div>
-);
+  );
 }
