@@ -31,6 +31,14 @@ mongoose
 
 const app = express();
 
+// 禁用 ETag（Express 默认会计算 ETag）
+// 并统一加上 Cache-Control: no-store，告诉客户端不要缓存
+app.set('etag', false);
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 // Middleware
 app.use(cors({
   origin: CORS_ORIGIN?.split(',').map(o => o.trim()) || '*',
