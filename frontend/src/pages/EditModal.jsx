@@ -1,78 +1,106 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
-import clsx from "clsx";
+import React, { useState, useEffect } from 'react';
+import clsx from 'clsx';
 
-export default function EditModal({ open, setOpen, initData, type, onSave }) {
-  const [form, setForm] = useState(initData || {});
-  const [file, setFile] = useState(null);
-  const fileRef = useRef();
+// 如果不想额外安装 slugify，可用下面这个简易函数生成 slug
+const simpleSlugify = (str) =>
+  str
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')          // 空格替换为 -
+    .replace(/[^a-z0-9-]/g, '');   // 去掉非字符和非数字
+
+function EditModal({ type, initialForm = {}, file, onSave, onCancel }) {
+  const [form, setForm] = useState(initialForm);
 
   useEffect(() => {
-    setForm(initData || {});
-    setFile(null);
-  }, [initData]);
+    setForm(initialForm);
+  }, [initialForm]);
 
-  const handle = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const commonFields = [
-    ["title", "标题"],
-    ["slug", "Slug"],
-    ["content", "内容", true],
-  ];
-  const projectFields = [
-    ["name", "名称"],
-    ["tagline", "Tagline"],
-    ["description", "描述", true],
-    ["link", "链接"],
-  ];
-
-  const fields = type === "blog" ? commonFields : projectFields;
+  const handleSave = () => {
+    if (type === 'blog') {
+      if (!form.title?.trim() || !form.content?.trim()) {
+        alert('标题和内容不能为空');
+        return;
+      }
+      // 前端兜底生成 slug，确保合法
+      form.slug = form.slug?.trim() || simpleSlugify(form.title);
+    } else {
+      if (!form.name?.trim()) {
+        alert('项目名称不能为空');
+        return;
+      }
+    }
+    onSave(form, file);
+  };
 
   return (
-    <Transition appear show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-20" onClose={() => setOpen(false)}>
-        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-          <div className="fixed inset-0 bg-black/30" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-              <Dialog.Panel className="w-full max-w-3xl transform rounded-2xl bg-white p-6 space-y-4 shadow-xl">
-                <Dialog.Title className="text-lg font-semibold mb-2">{initData ? "编辑" : "新建"} {type === "blog" ? "文章" : "项目"}</Dialog.Title>
-
-                {fields.map(([key, label, rich]) => rich ? (
-                  <div key={key} className="space-y-1">
-                    <label className="font-medium text-sm text-gray-700">{label}</label>
-                    <ReactQuill theme="snow" value={form[key] || ""} onChange={v => handle(key, v)} />
-                  </div>
-                ) : (
-                  <input key={key} className="input" placeholder={label} value={form[key] || ""} onChange={e => handle(key, e.target.value)} />
-                ))}
-
-                {/* 上传图片 (仅项目) */}
-                {type === "project" && (
-                  <div className="space-y-1">
-                    <label className="font-medium text-sm text-gray-700">项目封面</label>
-                    <input ref={fileRef} type="file" accept="image/*" className="block" onChange={e => setFile(e.target.files[0])} />
-                    {(file || form.image) && (
-                      <img src={file ? URL.createObjectURL(file) : form.image} alt="preview" className="h-32 object-cover rounded" />
-                    )}
-                  </div>
-                )}
-
-                {/* 保存 / 取消 */}
-                <div className="flex justify-end gap-3 pt-3">
-                  <button className="btn-outline" onClick={() => setOpen(false)}>取消</button>
-                  <button className={clsx("btn-primary", !form.title && !form.name && "opacity-40 pointer-events-none")}
-                    onClick={() => onSave(form, file)}>保存</button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
+    <div className="modal-backdrop">
+      <div className="modal-container">
+        <h3 className="modal-title">新建 {type === 'blog' ? '文章' : '项目'}</h3>
+        <div className="modal-body">
+          {type === 'blog' ? (
+            <>
+              <input
+                name="title"
+                value={form.title || ''}
+                onChange={handleChange}
+                placeholder="输入标题"
+                className="input"
+              />
+              <input
+                name="slug"
+                value={form.slug || ''}
+                onChange={handleChange}
+                placeholder="输入 slug (选填)"
+                className="input mt-2"
+              />
+              <textarea
+                name="content"
+                value={form.content || ''}
+                onChange={handleChange}
+                placeholder="输入内容"
+                className="textarea mt-2"
+                rows={6}
+              />
+            </>
+          ) : (
+            <>
+              <input
+                name="name"
+                value={form.name || ''}
+                onChange={handleChange}
+                placeholder="输入项目名称"
+                className="input"
+              />
+              <input
+                name="tagline"
+                value={form.tagline || ''}
+                onChange={handleChange}
+                placeholder="输入项目简介"
+                className="input mt-2"
+              />
+            </>
+          )}
         </div>
-      </Dialog>
-    </Transition>
+        <div className="modal-footer">
+          <button className="btn mr-2" onClick={onCancel}>取消</button>
+          <button className={clsx('btn btn-primary', {
+            'opacity-50 pointer-events-none':
+              (type === 'blog'
+                ? !form.title?.trim() || !form.content?.trim()
+                : !form.name?.trim()),
+          })} onClick={handleSave}>
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
+
+export default EditModal;
