@@ -20,14 +20,13 @@ const app = express();
 
 // ❶ 允许前端跨域访问：多个域名可用 逗号 分隔
 //    CORS_ORIGIN="https://quanqlee.github.io,https://preview.quanqlee.com"
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
-      : '*',
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : '*',
+  // credentials: true,   // 不用带 cookie，就去掉
+}));
+
 
 app.use(express.json());
 
