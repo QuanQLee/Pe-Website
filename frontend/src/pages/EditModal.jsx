@@ -1,47 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
-// 如果不想额外安装 slugify，可用下面这个简易函数生成 slug
-const simpleSlugify = (str) =>
+// 简易 slugify，无需额外依赖
+const simpleSlugify = str =>
   str
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, '-')          // 空格替换为 -
-    .replace(/[^a-z0-9-]/g, '');   // 去掉非字符和非数字
+    .replace(/\s+/g, '-')        // 空格 → ‘-’
+    .replace(/[^a-z0-9-]/g, ''); // 去掉非字母数字和‘-’
 
-function EditModal({ type, initialForm = {}, file, onSave, onCancel }) {
+export default function EditModal({
+  type,
+  initialForm = {},
+  onSave,
+  onCancel,
+}) {
   const [form, setForm] = useState(initialForm);
 
+  // 当 initialForm 改变时，重置 form
   useEffect(() => {
-    setForm(initialForm);
+    setForm(initialForm || {});
   }, [initialForm]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
+    // 验证 & 生成 slug
     if (type === 'blog') {
       if (!form.title?.trim() || !form.content?.trim()) {
         alert('标题和内容不能为空');
         return;
       }
-      // 前端兜底生成 slug，确保合法
-      form.slug = form.slug?.trim() || simpleSlugify(form.title);
+      form.slug =
+        form.slug?.trim() || simpleSlugify(form.title);
     } else {
       if (!form.name?.trim()) {
         alert('项目名称不能为空');
         return;
       }
     }
-    onSave(form, file);
+    onSave(form);
   };
 
   return (
     <div className="modal-backdrop">
       <div className="modal-container">
-        <h3 className="modal-title">新建 {type === 'blog' ? '文章' : '项目'}</h3>
+        <h3 className="modal-title">
+          {initialForm?._id ? '编辑' : '新建'}{' '}
+          {type === 'blog' ? '文章' : '项目'}
+        </h3>
         <div className="modal-body">
           {type === 'blog' ? (
             <>
@@ -88,13 +98,18 @@ function EditModal({ type, initialForm = {}, file, onSave, onCancel }) {
           )}
         </div>
         <div className="modal-footer">
-          <button className="btn mr-2" onClick={onCancel}>取消</button>
-          <button className={clsx('btn btn-primary', {
-            'opacity-50 pointer-events-none':
-              (type === 'blog'
-                ? !form.title?.trim() || !form.content?.trim()
-                : !form.name?.trim()),
-          })} onClick={handleSave}>
+          <button className="btn mr-2" onClick={onCancel}>
+            取消
+          </button>
+          <button
+            className={clsx('btn btn-primary', {
+              'opacity-50 pointer-events-none':
+                type === 'blog'
+                  ? !form.title?.trim() || !form.content?.trim()
+                  : !form.name?.trim(),
+            })}
+            onClick={handleSave}
+          >
             保存
           </button>
         </div>
@@ -102,5 +117,3 @@ function EditModal({ type, initialForm = {}, file, onSave, onCancel }) {
     </div>
   );
 }
-
-export default EditModal;
