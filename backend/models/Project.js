@@ -1,13 +1,27 @@
-// models/Project.js
 import mongoose from 'mongoose';
 
-const ProjectSchema = new mongoose.Schema({
-  name:        { type: String, required: true, unique: true, trim: true },
-  tagline:     String,
-  description: String,
-  image:       String,              // URL（前端暂时可以传空）
-  link:        String,              // GitHub / Demo
-  createdAt:   { type: Date, default: Date.now }
+const projectSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  tagline: {
+    type: String,
+    trim: true,
+  },
+  // 可选的外部链接，例如 GitHub 或项目主页
+  externalUrl: {
+    type: String,
+    trim: true,
+  },
+  // 上传的图片或 PDF 文件 URL
+  image: {
+    type: String,
+    trim: true,
+  },
+}, {
+  timestamps: true,
 });
 
-export default mongoose.model('Project', ProjectSchema);
+export default mongoose.model('Project', projectSchema);
