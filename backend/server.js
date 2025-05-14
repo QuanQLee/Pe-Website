@@ -4,17 +4,19 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 
-import authRoutes    from './routes/authRoutes.js';
-import blogRoutes    from './routes/blogRoutes.js';
+// Route modules
+import authRoutes from './routes/authRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 
-// Load env vars
+// Load environment variables
 dotenv.config();
-
-// Check required env
 const { MONGODB_URI, CORS_ORIGIN, PORT } = process.env;
+
+// Validate required env
 if (!MONGODB_URI) {
   console.error('❌ Missing MONGODB_URI');
   process.exit(1);
@@ -31,24 +33,26 @@ mongoose
 
 const app = express();
 
-// 禁用 ETag（Express 默认会计算 ETag）
-// 并统一加上 Cache-Control: no-store，告诉客户端不要缓存
+// Disable ETag and caching
 app.set('etag', false);
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
 
-// Middleware
-app.use(cors({
-  origin: CORS_ORIGIN?.split(',').map(o => o.trim()) || '*',
-  credentials: true
-}));
+// CORS
+app.use(
+  cors({
+    origin: CORS_ORIGIN ? CORS_ORIGIN.split(',').map(o => o.trim()) : '*',
+    credentials: true,
+  })
+);
+
+// Body parser
 app.use(express.json());
 
 // File uploads (optional)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-import multer from 'multer';
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 app.post('/api/upload', upload.single('file'), (req, res) => {
   const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
@@ -56,9 +60,9 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-app.use('/api/auth',     authRoutes);
-app.use('/api/blogs',    blogRoutes);
+// Mount routes
+app.use('/api/auth', authRoutes);
+app.use('/api/blogs', blogRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/messages', messageRoutes);
 
