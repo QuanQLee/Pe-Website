@@ -12,15 +12,22 @@ const BlogSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-/* 自动生成 / 去重 slug */
 BlogSchema.pre('validate', async function (next) {
   if (!this.slug && this.title) {
-    this.slug = slugify(this.title, { lower: true, strict: true });
+    // 先尝试生成英文 slug
+    const raw = slugify(this.title, { lower: true, strict: true });
+    // 如果 raw 为空，就退而求其次用当前时间戳
+    this.slug = raw || Date.now().toString();
   }
-  // 若 slug 已存在则追加时间戳
-  const exists = await mongoose.models.Blog.findOne({ slug: this.slug, _id: { $ne: this._id } });
-  if (exists) this.slug += '-' + Date.now();
+
+  // 再检查一次是否重复，重复就追加时间戳后缀
+  const exists = await mongoose.models.Blog.findOne({
+    slug: this.slug,
+    _id: { $ne: this._id },
+  });
+  if (exists) {
+    this.slug += '-' + Date.now();
+  }
+
   next();
 });
-
-export default mongoose.model('Blog', BlogSchema);
