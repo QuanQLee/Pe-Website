@@ -44,23 +44,43 @@ router.post('/', auth, async (req, res) => {
   res.json(blog);
 });
 
-// 编辑文章（确保 slug 合规，并打开验证）
-router.put('/:id', auth, async (req, res) => {
-  // 自动修正非法 slug
+// 编辑文章（支持 id 或 slug）
+router.put('/:key', auth, async (req, res) => {
+  const { key } = req.params;
   if (!req.body.slug || !/^[a-z0-9-]+$/.test(req.body.slug)) {
     req.body.slug = slugify(req.body.title, { lower: true, strict: true });
   }
-  const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true   // 启用 schema 校验
-  });
+  let updated = null;
+  if (mongoose.Types.ObjectId.isValid(key)) {
+    updated = await Blog.findByIdAndUpdate(key, req.body, {
+      new: true,
+      runValidators: true,
+    });
+  }
+  if (!updated) {
+    updated = await Blog.findOneAndUpdate({ slug: key }, req.body, {
+      new: true,
+      runValidators: true,
+    });
+  }
+  if (!updated) {
+    return res.status(404).json({ message: '未找到要更新的文章' });
+  }
   res.json(updated);
 });
 
-// 删除文章
-router.delete('/:id', auth, async (req, res) => {
-  await Blog.findByIdAndDelete(req.params.id);
+// 删除文章（支持 id 或 slug）
+router.delete('/:key', auth, async (req, res) => {
+  const { key } = req.params;
+  let result = null;
+  if (mongoose.Types.ObjectId.isValid(key)) {
+    result = await Blog.findByIdAndDelete(key);
+  }
+  if (!result) {
+    result = await Blog.findOneAndDelete({ slug: key });
+  }
+  if (!result) {
+    return res.status(404).json({ message: '未找到要删除的文章' });
+  }
   res.json({ success: true });
 });
-
-export default router;
