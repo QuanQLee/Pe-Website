@@ -57,22 +57,23 @@ export default function AdminDashboard() {
   };
 
   // columns
-  const columns = useMemo(
-    () => [
-      { header: tab === 'blog' ? '标题' : '名称', accessorKey: tab === 'blog' ? 'title' : 'name' },
-      { header: '日期', accessorFn: (row) => new Date(row.createdAt).toLocaleDateString() },
-      {
-        header: '操作',
-        cell: ({ row }) => (
-          <>
-            <button onClick={() => { setEditing(row.original); setModalOpen(true); }} className="btn-outline mr-2">✏︎</button>
-            <button onClick={() => handleDelete(row.original)} className="btn-danger">🗑</button>
-          </>
-        ),
-      },
-    ],
-    [tab]
-  );
+const columns = useMemo(
+  () => [
+    { header: tab === 'blog' ? '标题' : '名称', accessorKey: tab === 'blog' ? 'title' : 'name' },
+    tab === 'blog'
+      ? { header: '简介', accessorKey: 'summary' }
+      : { header: '简介', accessorKey: 'tagline' },
+    tab === 'blog'
+      ? { header: '标签', accessorFn: row => row.tags }
+      : { header: '描述', accessorKey: 'description' },
+    tab === 'blog'
+      ? { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{width:40}} /> : '' }
+      : { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{width:40}} /> : '' },
+    { header: '日期', accessorFn: (row) => new Date(row.createdAt).toLocaleDateString() },
+    // 操作按钮...
+  ],
+  [tab]
+);
 
   // table instance
   const table = useReactTable({

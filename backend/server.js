@@ -40,6 +40,7 @@ app.use((req, res, next) => {
   next();
 });
 
+console.log('CORS_ORIGIN=', process.env.CORS_ORIGIN);
 // CORS
 app.use(
   cors({
