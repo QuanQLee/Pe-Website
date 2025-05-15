@@ -17,6 +17,14 @@ export default function AdminDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
+  // 获取一个有效的 slug 或 _id（优先 slug，且不能为 "" 或 undefined）
+  const getIdOrSlug = (item) => {
+    if (item && item.slug && typeof item.slug === 'string' && item.slug.trim() !== '') {
+      return item.slug;
+    }
+    return item._id;
+  };
+
   // fetch list whenever tab changes or after save/delete
   const fetchList = async () => {
     setLoading(true);
@@ -36,7 +44,7 @@ export default function AdminDashboard() {
     const base = tab === 'blog' ? '/blogs' : '/projects';
     if (editing && (editing._id || editing.slug)) {
       // update
-      const idOrSlug = editing._id || editing.slug;
+      const idOrSlug = getIdOrSlug(editing);
       await api.put(`${base}/${idOrSlug}`, form);
     } else {
       // create
@@ -49,31 +57,45 @@ export default function AdminDashboard() {
 
   // Delete
   const handleDelete = async (orig) => {
-    const idOrSlug = orig._id || orig.slug;
+    const idOrSlug = getIdOrSlug(orig);
     if (!confirm('确认删除此条记录？')) return;
     const base = tab === 'blog' ? '/blogs' : '/projects';
     await api.delete(`${base}/${idOrSlug}`);
-    setData((prev) => prev.filter((it) => (it._id || it.slug) !== idOrSlug));
+    setData((prev) => prev.filter((it) => getIdOrSlug(it) !== idOrSlug));
   };
 
   // columns
-const columns = useMemo(
-  () => [
-    { header: tab === 'blog' ? '标题' : '名称', accessorKey: tab === 'blog' ? 'title' : 'name' },
-    tab === 'blog'
-      ? { header: '简介', accessorKey: 'summary' }
-      : { header: '简介', accessorKey: 'tagline' },
-    tab === 'blog'
-      ? { header: '标签', accessorFn: row => row.tags }
-      : { header: '描述', accessorKey: 'description' },
-    tab === 'blog'
-      ? { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{width:40}} /> : '' }
-      : { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{width:40}} /> : '' },
-    { header: '日期', accessorFn: (row) => new Date(row.createdAt).toLocaleDateString() },
-    // 操作按钮...
-  ],
-  [tab]
-);
+  const columns = useMemo(
+    () => [
+      { header: tab === 'blog' ? '标题' : '名称', accessorKey: tab === 'blog' ? 'title' : 'name' },
+      tab === 'blog'
+        ? { header: '简介', accessorKey: 'summary' }
+        : { header: '简介', accessorKey: 'tagline' },
+      tab === 'blog'
+        ? { header: '标签', accessorFn: row => row.tags }
+        : { header: '描述', accessorKey: 'description' },
+      tab === 'blog'
+        ? { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 40 }} /> : '' }
+        : { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 40 }} /> : '' },
+      { header: '日期', accessorFn: (row) => new Date(row.createdAt).toLocaleDateString() },
+      {
+        header: '操作',
+        cell: ({ row }) => (
+          <>
+            <button
+              onClick={() => { setEditing(row.original); setModalOpen(true); }}
+              className="btn-outline mr-2"
+            >✏︎</button>
+            <button
+              onClick={() => handleDelete(row.original)}
+              className="btn-danger"
+            >🗑</button>
+          </>
+        ),
+      },
+    ],
+    [tab]
+  );
 
   // table instance
   const table = useReactTable({
@@ -126,13 +148,13 @@ const columns = useMemo(
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={3} className="p-6 text-center text-gray-400">
+                <td colSpan={columns.length} className="p-6 text-center text-gray-400">
                   加载中…
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={3} className="p-6 text-center text-gray-400">
+                <td colSpan={columns.length} className="p-6 text-center text-gray-400">
                   暂无数据
                 </td>
               </tr>
