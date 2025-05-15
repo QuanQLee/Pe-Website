@@ -19,7 +19,7 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
