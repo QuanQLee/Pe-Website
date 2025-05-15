@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/admin-login'); // 跳转到你的登录页面
+      navigate('/admin/login'); // 跳转到你的登录页面
     }
   }, [navigate]);
   // -------- 登录拦截逻辑 end --------
