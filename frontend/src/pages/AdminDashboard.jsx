@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 新增
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,22 +10,6 @@ import {
 import clsx from 'clsx';
 import api from '../api';
 import EditModal from './EditModal';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-export default function AdminDashboard() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // 检查本地是否有 token，没有则跳转到登录
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/admin-login'); // 你的登录页面路由
-    }
-  }, []);
-
-  // ...其余渲染代码...
-}
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('blog');
@@ -32,6 +17,19 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+
+  const navigate = useNavigate(); // 新增
+
+  // -------- 登录拦截逻辑 start --------
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/admin-login'); // 跳转到你的登录页面
+    }
+  }, [navigate]);
+  // -------- 登录拦截逻辑 end --------
+
+  // ...其余代码不变...
 
   // 获取一个有效的 slug 或 _id（优先 slug，且不能为 "" 或 undefined）
   const getIdOrSlug = (item) => {
