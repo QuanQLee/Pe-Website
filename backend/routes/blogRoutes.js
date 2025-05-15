@@ -84,3 +84,5 @@ router.delete('/:key', auth, async (req, res) => {
   }
   res.json({ success: true });
 });
+
+export default router;
