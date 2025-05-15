@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8cbaf0f5-3b03-42c7-b3a8-70ce0bfb7f7a" name="Changes" comment="initial">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Blog.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Blog.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/EditModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/EditModal.jsx" afterDir="false" />
-    </list>
+    <list default="true" id="8cbaf0f5-3b03-42c7-b3a8-70ce0bfb7f7a" name="Changes" comment="initial" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -67,14 +63,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1745934549436</updated>
-    </task>
-    <task id="LOCAL-00109" summary="initial">
-      <option name="closed" value="true" />
-      <created>1747019723380</created>
-      <option name="number" value="00109" />
-      <option name="presentableId" value="LOCAL-00109" />
-      <option name="project" value="LOCAL" />
-      <updated>1747019723380</updated>
     </task>
     <task id="LOCAL-00110" summary="initial">
       <option name="closed" value="true" />
@@ -460,7 +448,15 @@
       <option name="project" value="LOCAL" />
       <updated>1747228573693</updated>
     </task>
-    <option name="localTasksCounter" value="158" />
+    <task id="LOCAL-00158" summary="initial">
+      <option name="closed" value="true" />
+      <created>1747281221209</created>
+      <option name="number" value="00158" />
+      <option name="presentableId" value="LOCAL-00158" />
+      <option name="project" value="LOCAL" />
+      <updated>1747281221209</updated>
+    </task>
+    <option name="localTasksCounter" value="159" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
