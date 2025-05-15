@@ -42,12 +42,8 @@ app.use((req, res, next) => {
 
 console.log('CORS_ORIGIN=', process.env.CORS_ORIGIN);
 // CORS
-app.use(
-  cors({
-    origin: CORS_ORIGIN ? CORS_ORIGIN.split(',').map(o => o.trim()) : '*',
-    credentials: true,
-  })
-);
+app.use(cors());
+
 
 // Body parser
 app.use(express.json());
