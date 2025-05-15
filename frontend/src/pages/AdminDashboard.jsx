@@ -9,6 +9,22 @@ import {
 import clsx from 'clsx';
 import api from '../api';
 import EditModal from './EditModal';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 检查本地是否有 token，没有则跳转到登录
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/admin-login'); // 你的登录页面路由
+    }
+  }, []);
+
+  // ...其余渲染代码...
+}
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('blog');
