@@ -8,7 +8,6 @@ const api = axios.create({
 
 // 自动带上 JWT
 api.interceptors.request.use(cfg => {
-  // key 必须统一为 'token'！
   const t = localStorage.getItem('token');
   if (t) cfg.headers.Authorization = `Bearer ${t}`;
   return cfg;
@@ -20,7 +19,6 @@ api.interceptors.response.use(
   err => {
     if (err.response && err.response.status === 401) {
       localStorage.removeItem('token');
-      // 单页应用推荐用 window.location.hash
       if (window.location.hash) {
         window.location.hash = '#/admin/login';
       } else {
@@ -31,4 +29,19 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+// ========== 下面是你需要补全的 API 方法 ==========
+const apiExport = {
+  // 文章
+  getBlogs:    () => api.get('/blogs'),
+  createBlog:  (data) => api.post('/blogs', data),
+  updateBlog:  (id, data) => api.put(`/blogs/${id}`, data),
+  deleteBlog:  (id) => api.delete(`/blogs/${id}`),
+  // 项目
+  getProjects: () => api.get('/projects'),
+  createProject: (data) => api.post('/projects', data),
+  updateProject: (id, data) => api.put(`/projects/${id}`, data),
+  deleteProject: (id) => api.delete(`/projects/${id}`),
+  // 你如果后端有其它API可以继续加
+};
+
+export default apiExport;
