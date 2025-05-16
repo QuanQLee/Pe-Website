@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import SimpleMDE from "react-simplemde-editor";
-import "@uiw/react-markdown-preview/dist/markdown.css";
+import MDEditor from "@uiw/react-md-editor";
+import "@uiw/react-markdown-preview/markdown.css";
 import "@uiw/react-md-editor/markdown-editor.css";
 
 // 简易 slugify，无需依赖
@@ -65,16 +65,13 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
               />
               {/* 用 Markdown 编辑器替代 textarea */}
               <label className="block mt-3 mb-1 font-semibold">内容</label>
-              <SimpleMDE
-                value={form.content || ""}
-                onChange={v => setForm(f => ({ ...f, content: v }))}
-                options={{
-                  spellChecker: false,
-                  placeholder: "输入内容，支持Markdown格式~",
-                  minHeight: '200px',
-                  status: false
-                }}
-              />
+              <div data-color-mode="light">
+                <MDEditor
+                  value={form.content || ""}
+                  onChange={v => setForm(f => ({ ...f, content: v || "" }))}
+                  height={400}
+                />
+              </div>
             </>
           ) : (
             <>
@@ -82,7 +79,14 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
               <input name="tagline" value={form.tagline || ''} onChange={handleChange} placeholder="输入项目简介" className="input mt-2" />
               <input name="coverImg" value={form.coverImg || ''} onChange={handleChange} placeholder="项目封面图片" className="input mt-2" />
               <input name="link" value={form.link || ''} onChange={handleChange} placeholder="项目链接" className="input mt-2" />
-              <textarea name="description" value={form.description || ''} onChange={handleChange} placeholder="项目描述" className="textarea mt-2" rows={4} />
+              <label className="block mt-3 mb-1 font-semibold">项目描述</label>
+              <div data-color-mode="light">
+                <MDEditor
+                  value={form.description || ""}
+                  onChange={v => setForm(f => ({ ...f, description: v || "" }))}
+                  height={200}
+                />
+              </div>
               <input
                 name="finishedAt"
                 type="date"
