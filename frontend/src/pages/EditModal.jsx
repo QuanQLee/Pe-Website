@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
+import SimpleMDE from "react-simplemde-editor";
+import "easymde/dist/easymde.min.css";
 
 // 简易 slugify，无需依赖
 const simpleSlugify = (str) =>
@@ -60,7 +62,18 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
                 onChange={handleChange}
                 className="input mt-2"
               />
-              <textarea name="content" value={form.content || ''} onChange={handleChange} placeholder="输入内容（支持 Markdown）" className="textarea mt-2" rows={6} />
+              {/* 用 Markdown 编辑器替代 textarea */}
+              <label className="block mt-3 mb-1 font-semibold">内容</label>
+              <SimpleMDE
+                value={form.content || ""}
+                onChange={v => setForm(f => ({ ...f, content: v }))}
+                options={{
+                  spellChecker: false,
+                  placeholder: "输入内容，支持Markdown格式~",
+                  minHeight: '200px',
+                  status: false
+                }}
+              />
             </>
           ) : (
             <>
