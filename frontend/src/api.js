@@ -1,20 +1,20 @@
-import axios from 'axios';
+import axios from "axios";
 
-const api = axios.create({
+const instance = axios.create({
   baseURL: import.meta.env.PROD
-    ? 'https://test-production-fe71.up.railway.app/api'
-    : 'http://localhost:4000/api'
+    ? "https://test-production-fe71.up.railway.app/api"
+    : "http://localhost:4000/api"
 });
 
-// 自动带上 JWT
-api.interceptors.request.use(cfg => {
+// JWT 自动带上
+instance.interceptors.request.use(cfg => {
   const t = localStorage.getItem('token');
   if (t) cfg.headers.Authorization = `Bearer ${t}`;
   return cfg;
 });
 
-// 响应拦截器：遇到 401 自动退出并跳到登录页
-api.interceptors.response.use(
+// 401 处理
+instance.interceptors.response.use(
   res => res,
   err => {
     if (err.response && err.response.status === 401) {
@@ -29,19 +29,18 @@ api.interceptors.response.use(
   }
 );
 
-// ========== 下面是你需要补全的 API 方法 ==========
-const apiExport = {
-  // 文章
-  getBlogs:    () => api.get('/blogs'),
-  createBlog:  (data) => api.post('/blogs', data),
-  updateBlog:  (id, data) => api.put(`/blogs/${id}`, data),
-  deleteBlog:  (id) => api.delete(`/blogs/${id}`),
-  // 项目
-  getProjects: () => api.get('/projects'),
-  createProject: (data) => api.post('/projects', data),
-  updateProject: (id, data) => api.put(`/projects/${id}`, data),
-  deleteProject: (id) => api.delete(`/projects/${id}`),
-  // 你如果后端有其它API可以继续加
+// 真正导出的对象
+const api = {
+  // 文章相关
+  getBlogs: () => instance.get('/blogs'),
+  createBlog: (data) => instance.post('/blogs', data),
+  updateBlog: (id, data) => instance.put(`/blogs/${id}`, data),
+  deleteBlog: (id) => instance.delete(`/blogs/${id}`),
+  // 项目相关
+  getProjects: () => instance.get('/projects'),
+  createProject: (data) => instance.post('/projects', data),
+  updateProject: (id, data) => instance.put(`/projects/${id}`, data),
+  deleteProject: (id) => instance.delete(`/projects/${id}`),
 };
 
-export default apiExport;
+export default api;
