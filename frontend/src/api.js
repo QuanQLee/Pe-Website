@@ -1,24 +1,26 @@
-import axios from "axios";
+import axios from 'axios';
 
-const instance = axios.create({
+const api = axios.create({
   baseURL: import.meta.env.PROD
-    ? "https://test-production-fe71.up.railway.app/api"
-    : "http://localhost:4000/api"
+    ? 'https://test-production-fe71.up.railway.app/api'
+    : 'http://localhost:4000/api'
 });
 
-// JWT 自动带上
-instance.interceptors.request.use(cfg => {
+// 自动带上 JWT
+api.interceptors.request.use(cfg => {
+  // key 必须统一为 'token'！
   const t = localStorage.getItem('token');
   if (t) cfg.headers.Authorization = `Bearer ${t}`;
   return cfg;
 });
 
-// 401 处理
-instance.interceptors.response.use(
+// 响应拦截器：遇到 401 自动退出并跳到登录页
+api.interceptors.response.use(
   res => res,
   err => {
     if (err.response && err.response.status === 401) {
       localStorage.removeItem('token');
+      // 单页应用推荐用 window.location.hash
       if (window.location.hash) {
         window.location.hash = '#/admin/login';
       } else {
@@ -28,19 +30,5 @@ instance.interceptors.response.use(
     return Promise.reject(err);
   }
 );
-
-// 真正导出的对象
-const api = {
-  // 文章相关
-  getBlogs: () => instance.get('/blogs'),
-  createBlog: (data) => instance.post('/blogs', data),
-  updateBlog: (id, data) => instance.put(`/blogs/${id}`, data),
-  deleteBlog: (id) => instance.delete(`/blogs/${id}`),
-  // 项目相关
-  getProjects: () => instance.get('/projects'),
-  createProject: (data) => instance.post('/projects', data),
-  updateProject: (id, data) => instance.put(`/projects/${id}`, data),
-  deleteProject: (id) => instance.delete(`/projects/${id}`),
-};
 
 export default api;

@@ -1,203 +1,204 @@
-import React, { useEffect, useState } from "react";
-import clsx from "clsx";
-import api from "../api";
-import MDEditor from "@uiw/react-md-editor";
-import "@uiw/react-md-editor/markdown-editor.css";
-import "@uiw/react-markdown-preview/markdown.css";
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  flexRender,
+} from '@tanstack/react-table';
+import clsx from 'clsx';
+import api from '../api';
+import EditModal from './EditModal';
 
-// 弹窗表单
-function EditModal({ type, initialForm = {}, onSave, onCancel }) {
-  const [form, setForm] = useState(initialForm || {});
-  useEffect(() => { setForm(initialForm || {}); }, [initialForm]);
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-  const handleSave = () => {
-    if (type === "blog") {
-      if (!form.title?.trim() || !form.content?.trim()) {
-        alert("标题和内容不能为空");
-        return;
-      }
-    } else {
-      if (!form.name?.trim() || !form.description?.trim()) {
-        alert("项目名称和描述不能为空");
-        return;
-      }
-    }
-    onSave(form);
-  };
-  return (
-    <div className="modal-backdrop">
-      <div className="modal-container" style={{ maxWidth: 700 }}>
-        <h3 className="modal-title">
-          {initialForm._id ? "编辑" : "新建"}{type === "blog" ? "文章" : "项目"}
-        </h3>
-        <div className="modal-body">
-          {type === "blog" ? (
-            <>
-              <input name="title" value={form.title || ""} onChange={handleChange} placeholder="输入标题" className="input" />
-              <input name="slug" value={form.slug || ""} onChange={handleChange} placeholder="slug (选填)" className="input mt-2" />
-              <input name="summary" value={form.summary || ""} onChange={handleChange} placeholder="文章简介" className="input mt-2" />
-              <input name="tags" value={form.tags || ""} onChange={handleChange} placeholder="标签，逗号分隔" className="input mt-2" />
-              <input name="coverImg" value={form.coverImg || ""} onChange={handleChange} placeholder="封面图片地址" className="input mt-2" />
-              <input name="publishedAt" type="datetime-local" value={form.publishedAt || ""} onChange={handleChange} className="input mt-2" />
-              <label className="block mt-3 mb-1 font-semibold">内容</label>
-              <div data-color-mode="light">
-                <MDEditor
-                  value={form.content || ""}
-                  onChange={v => setForm(f => ({ ...f, content: v || "" }))}
-                  height={350}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <input name="name" value={form.name || ""} onChange={handleChange} placeholder="项目名称" className="input" />
-              <input name="tagline" value={form.tagline || ""} onChange={handleChange} placeholder="项目简介" className="input mt-2" />
-              <input name="coverImg" value={form.coverImg || ""} onChange={handleChange} placeholder="项目封面图片" className="input mt-2" />
-              <input name="link" value={form.link || ""} onChange={handleChange} placeholder="项目链接" className="input mt-2" />
-              <label className="block mt-3 mb-1 font-semibold">项目描述</label>
-              <div data-color-mode="light">
-                <MDEditor
-                  value={form.description || ""}
-                  onChange={v => setForm(f => ({ ...f, description: v || "" }))}
-                  height={200}
-                />
-              </div>
-              <input name="finishedAt" type="date" value={form.finishedAt || ""} onChange={handleChange} className="input mt-2" />
-            </>
-          )}
-        </div>
-        <div className="modal-footer">
-          <button className="btn mr-2" onClick={onCancel}>取消</button>
-          <button className={clsx("btn btn-primary", { "opacity-50 pointer-events-none": type === "blog" ? !form.title?.trim() || !form.content?.trim() : !form.name?.trim() || !form.description?.trim() })} onClick={handleSave}>保存</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+const TABS = [
+  { key: 'blog', label: '文章管理' },
+  { key: 'project', label: '项目管理' },
+];
 
 export default function AdminDashboard() {
-  const [type, setType] = useState("blog");
-  const [items, setItems] = useState([]);
+  const [tab, setTab] = useState('blog');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editData, setEditData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(null);
 
-  // 获取列表
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = type === "blog" ? await api.getBlogs() : await api.getProjects();
-      setItems(res.data.reverse());
-    } finally {
-      setLoading(false);
-    }
+  const navigate = useNavigate();
+
+  // 退出登录
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/admin/login');
   };
-  useEffect(() => { fetchData(); }, [type]);
 
-  // 保存/编辑
-  const handleSave = async (form) => {
+  // 获取有效 slug 或 _id
+  const getIdOrSlug = (item) => {
+    if (item && item.slug && typeof item.slug === 'string' && item.slug.trim() !== '') {
+      return item.slug;
+    }
+    return item._id;
+  };
+
+  // 获取数据
+  const fetchList = async () => {
     setLoading(true);
-    try {
-      if (type === "blog") {
-        if (form._id) await api.updateBlog(form._id, form);
-        else await api.createBlog(form);
-      } else {
-        if (form._id) await api.updateProject(form._id, form);
-        else await api.createProject(form);
-      }
-      setModalOpen(false);
-      fetchData();
-    } finally { setLoading(false); }
+    const url = tab === 'blog' ? '/blogs' : '/projects';
+    const res = await api.get(url);
+    setData(Array.isArray(res.data) ? res.data : []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchList();
+  }, [tab]);
+
+  // 保存
+  const handleSave = async (form) => {
+    const base = tab === 'blog' ? '/blogs' : '/projects';
+    if (editing && (editing._id || editing.slug)) {
+      const idOrSlug = getIdOrSlug(editing);
+      await api.put(`${base}/${idOrSlug}`, form);
+    } else {
+      await api.post(base, form);
+    }
+    setModalOpen(false);
+    setEditing(null);
+    fetchList();
   };
 
   // 删除
-  const handleDelete = async (id) => {
-    if (!window.confirm("确定要删除吗？")) return;
-    setLoading(true);
-    try {
-      if (type === "blog") await api.deleteBlog(id);
-      else await api.deleteProject(id);
-      fetchData();
-    } finally { setLoading(false); }
+  const handleDelete = async (orig) => {
+    const idOrSlug = getIdOrSlug(orig);
+    if (!window.confirm('确定要删除吗？删除后无法恢复。')) return;
+    const base = tab === 'blog' ? '/blogs' : '/projects';
+    await api.delete(`${base}/${idOrSlug}`);
+    setData((prev) => prev.filter((it) => getIdOrSlug(it) !== idOrSlug));
   };
 
+  // 表格列定义
+  const columns = useMemo(
+    () => [
+      { header: '#', cell: ({ row }) => row.index + 1 },
+      tab === 'blog'
+        ? { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> }
+        : { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> },
+      tab === 'blog'
+        ? { header: '标题', accessorKey: 'title' }
+        : { header: '名称', accessorKey: 'name' },
+      tab === 'blog'
+        ? { header: '标签', accessorFn: row => row.tags || '' }
+        : { header: '简介', accessorKey: 'tagline' },
+      tab === 'blog'
+        ? { header: '简介', accessorKey: 'summary' }
+        : { header: '描述', accessorKey: 'description' },
+      { header: '更新时间', accessorFn: row => row.updatedAt ? new Date(row.updatedAt).toLocaleString() : (row.createdAt ? new Date(row.createdAt).toLocaleString() : '-') },
+      {
+        header: '操作',
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setEditing(row.original); setModalOpen(true); }}
+              className="btn-outline"
+              title="编辑"
+            >编辑</button>
+            <button
+              onClick={() => handleDelete(row.original)}
+              className="btn-danger"
+              title="删除"
+            >删除</button>
+          </div>
+        ),
+      },
+    ],
+    [tab]
+  );
+
+  // 表格实例
+  const table = useReactTable({
+    data,
+    columns,
+    state: { pagination: { pageIndex: 0, pageSize: 10 } },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
   return (
-    <div className="p-6">
-      <div className="mb-4">
-        <button
-          className={clsx("btn", { "btn-primary": type === "blog" })} onClick={() => setType("blog")}
-        >文章管理</button>
-        <button
-          className={clsx("btn ml-2", { "btn-primary": type === "project" })} onClick={() => setType("project")}
-        >项目管理</button>
-        <button className="btn btn-success ml-4" onClick={() => { setEditData({}); setModalOpen(true); }}>
-          + 新建{type === "blog" ? "文章" : "项目"}
-        </button>
-      </div>
-      {loading && <div className="my-6 text-center">加载中...</div>}
-      {!loading && (
-        <table className="table-auto w-full mb-4">
-          <thead>
-            <tr>
-              <th className="px-2 py-1">#</th>
-              {type === "blog" ? (
-                <>
-                  <th>标题</th>
-                  <th>标签</th>
-                  <th>简介</th>
-                  <th>更新时间</th>
-                  <th>操作</th>
-                </>
-              ) : (
-                <>
-                  <th>项目名称</th>
-                  <th>简介</th>
-                  <th>完成时间</th>
-                  <th>操作</th>
-                </>
+    <div className="max-w-7xl mx-auto mt-10">
+      {/* 工具栏 */}
+      <div className="flex items-center mb-6">
+        <div className="flex gap-2">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => { setTab(t.key); setEditing(null); }}
+              className={clsx(
+                'px-6 py-2 rounded-full font-medium transition-all',
+                t.key === tab
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
               )}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <tr key={item._id || i}>
-                <td className="border px-2">{i + 1}</td>
-                {type === "blog" ? (
-                  <>
-                    <td className="border px-2">{item.title}</td>
-                    <td className="border px-2">{item.tags}</td>
-                    <td className="border px-2">{item.summary}</td>
-                    <td className="border px-2">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : ""}</td>
-                    <td className="border px-2">
-                      <button className="btn btn-sm mr-2" onClick={() => { setEditData(item); setModalOpen(true); }}>编辑</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item._id)}>删除</button>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="border px-2">{item.name}</td>
-                    <td className="border px-2">{item.tagline}</td>
-                    <td className="border px-2">{item.finishedAt || ""}</td>
-                    <td className="border px-2">
-                      <button className="btn btn-sm mr-2" onClick={() => { setEditData(item); setModalOpen(true); }}>编辑</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item._id)}>删除</button>
-                    </td>
-                  </>
-                )}
+            >{t.label}</button>
+          ))}
+        </div>
+        <button
+          onClick={() => { setEditing(null); setModalOpen(true); }}
+          className="ml-auto btn-primary"
+        >＋ 新建{tab === 'blog' ? '文章' : '项目'}</button>
+        <button
+          onClick={handleLogout}
+          className="ml-4 px-4 py-2 rounded text-sm border border-gray-300 hover:bg-gray-100"
+        >退出登录</button>
+      </div>
+
+      {/* 数据表格 */}
+      <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-gray-50">
+            {table.getHeaderGroups().map(hg => (
+              <tr key={hg.id}>
+                {hg.headers.map(h => (
+                  <th key={h.id} className="p-3 text-left font-semibold">{flexRender(h.column.columnDef.header, h.getContext())}</th>
+                ))}
               </tr>
             ))}
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="p-6 text-center text-gray-400">加载中…</td>
+              </tr>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="p-6 text-center text-gray-400">暂无数据</td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="border-t hover:bg-blue-50/20">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="p-3 align-middle">{flexRender(cell.column.columnDef.cell ?? cell.column.columnDef.accessorFn, cell.getContext())}</td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
-      )}
+      </div>
+
+      {/* 分页 */}
+      <div className="flex items-center gap-4 mt-4">
+        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} className="btn-outline">上一页</button>
+        <span>{table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</span>
+        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} className="btn-outline">下一页</button>
+      </div>
+
+      {/* 编辑弹窗 */}
       {modalOpen && (
         <EditModal
-          type={type}
-          initialForm={editData}
+          type={tab}
+          initialForm={editing || {}}
           onSave={handleSave}
-          onCancel={() => setModalOpen(false)}
+          onCancel={() => { setModalOpen(false); setEditing(null); }}
         />
       )}
     </div>
