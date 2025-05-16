@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/dist/mdeditor.min.css";
-import "@uiw/react-markdown-preview/dist/markdown.min.css";
+import "@uiw/react-markdown-preview/dist/markdown.css";
 
-// 简易 slugify
+// 简易 slugify，无需依赖
 const simpleSlugify = (str) =>
   str
     .trim()
@@ -66,8 +66,7 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
                 <MDEditor
                   value={form.content || ""}
                   onChange={v => setForm(f => ({ ...f, content: v || "" }))}
-                  height={350}
-                  textareaProps={{ placeholder: "输入内容，支持 Markdown 语法" }}
+                  height={400}
                 />
               </div>
             </>
@@ -82,8 +81,7 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
                 <MDEditor
                   value={form.description || ""}
                   onChange={v => setForm(f => ({ ...f, description: v || "" }))}
-                  height={250}
-                  textareaProps={{ placeholder: "输入项目描述，支持 Markdown 语法" }}
+                  height={200}
                 />
               </div>
               <input

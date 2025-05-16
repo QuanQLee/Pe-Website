@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import SimpleMDE from "react-simplemde-editor";
-import "easymde/dist/easymde.min.css";
+import "@uiw/react-markdown-preview/dist/markdown.css";
+import "@uiw/react-md-editor/markdown-editor.css";
 
 // 简易 slugify，无需依赖
 const simpleSlugify = (str) =>
