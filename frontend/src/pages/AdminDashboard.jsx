@@ -76,21 +76,14 @@ export default function AdminDashboard() {
   };
 
   // 表格列定义
-  const columns = useMemo(
-    () => [
+const columns = useMemo(() => {
+  if (tab === 'blog') {
+    return [
       { header: '#', cell: ({ row }) => row.index + 1 },
-      tab === 'blog'
-        ? { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> }
-        : { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> },
-      tab === 'blog'
-        ? { header: '标题', accessorKey: 'title' }
-        : { header: '名称', accessorKey: 'name' },
-      tab === 'blog'
-        ? { header: '标签', accessorFn: row => row.tags || '' }
-        : { header: '简介', accessorKey: 'tagline' },
-      tab === 'blog'
-        ? { header: '简介', accessorKey: 'summary' }
-        : { header: '描述', accessorKey: 'description' },
+      { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> },
+      { header: '标题', accessorKey: 'title' },
+      { header: '标签', accessorFn: row => row.tags || '' },
+      { header: '简介', accessorKey: 'summary' },
       { header: '更新时间', accessorFn: row => row.updatedAt ? new Date(row.updatedAt).toLocaleString() : (row.createdAt ? new Date(row.createdAt).toLocaleString() : '-') },
       {
         header: '操作',
@@ -109,9 +102,36 @@ export default function AdminDashboard() {
           </div>
         ),
       },
-    ],
-    [tab]
-  );
+    ];
+  }
+  // 重点：项目管理 columns 更专业
+  return [
+    { header: '#', cell: ({ row }) => row.index + 1 },
+    { header: '封面', accessorFn: row => row.coverImg ? <img src={row.coverImg} alt="" style={{ width: 50, borderRadius: 4 }} /> : <span className="text-gray-300">无</span> },
+    { header: '名称', accessorKey: 'name' },
+    { header: '简介', accessorKey: 'tagline' },
+    { header: '描述', accessorFn: row => (row.description?.length > 30 ? <span title={row.description}>{row.description.slice(0, 30)}...</span> : row.description) },
+    { header: '链接', accessorFn: row => row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">访问</a> : <span className="text-gray-300">-</span> },
+    { header: '完成日期', accessorFn: row => row.finishedAt ? new Date(row.finishedAt).toLocaleDateString() : (row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-') },
+    {
+      header: '操作',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setEditing(row.original); setModalOpen(true); }}
+            className="btn-outline"
+            title="编辑"
+          >编辑</button>
+          <button
+            onClick={() => handleDelete(row.original)}
+            className="btn-danger"
+            title="删除"
+          >删除</button>
+        </div>
+      ),
+    },
+  ];
+}, [tab]);
 
   // 表格实例
   const table = useReactTable({
