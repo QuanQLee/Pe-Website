@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import MDEditor from "@uiw/react-md-editor";
-import "@uiw/react-md-editor/dist/mdeditor.min.css";
-import "@uiw/react-markdown-preview/dist/markdown.css";
+import "@uiw/react-md-editor/dist/react-md-editor.css";
 
 
 // 简易 slugify，无需依赖
