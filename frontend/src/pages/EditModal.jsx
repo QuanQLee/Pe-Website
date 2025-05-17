@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import "@uiw/react-md-editor/dist/mdeditor.css"; // 推荐开发时用
-// 或者
-// import "@uiw/react-md-editor/dist/mdeditor.min.css"; // 推荐生产环境用
-import "@uiw/react-markdown-preview/dist/markdown.css"; // 如果你还需要 markdown 预览样式
+import "@uiw/react-md-editor/dist/mdeditor.css";
+// 或者你想精简一点就用
+// import "@uiw/react-md-editor/dist/mdeditor.min.css";
+
+import "@uiw/react-markdown-preview/dist/markdown.css";
+
 
 
 // 简易 slugify，无需依赖
