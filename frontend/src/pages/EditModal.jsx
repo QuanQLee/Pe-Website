@@ -3,16 +3,10 @@ import clsx from 'clsx';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 
-// 简易 slugify，无需依赖
 const simpleSlugify = (str) =>
-  str
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+  str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
 export default function EditModal({ type, initialForm = {}, onSave, onCancel }) {
-  // 初始 form 从 initialForm 或空对象
   const [form, setForm] = useState(initialForm || {});
 
   useEffect(() => {
@@ -30,7 +24,6 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
         alert('标题和内容不能为空');
         return;
       }
-      // 生成 slug
       form.slug = form.slug?.trim() || simpleSlugify(form.title);
     } else {
       if (!form.name?.trim()) {
@@ -62,7 +55,6 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
                 onChange={handleChange}
                 className="input mt-2"
               />
-              {/* 用 Markdown 编辑器替代 textarea */}
               <label className="block mt-3 mb-1 font-semibold">内容</label>
               <SimpleMDE
                 value={form.content || ""}
@@ -79,9 +71,24 @@ export default function EditModal({ type, initialForm = {}, onSave, onCancel }) 
             <>
               <input name="name" value={form.name || ''} onChange={handleChange} placeholder="输入项目名称" className="input" />
               <input name="tagline" value={form.tagline || ''} onChange={handleChange} placeholder="输入项目简介" className="input mt-2" />
-              <input name="coverImg" value={form.coverImg || ''} onChange={handleChange} placeholder="项目封面图片" className="input mt-2" />
+              <input name="coverImg" value={form.coverImg || ''} onChange={handleChange} placeholder="项目封面图片URL（如 https://xxx.png）" className="input mt-2" />
+              {form.coverImg && (
+                <div style={{ margin: '10px 0' }}>
+                  <img src={form.coverImg} alt="项目封面预览" style={{ maxWidth: 180, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+                </div>
+              )}
               <input name="link" value={form.link || ''} onChange={handleChange} placeholder="项目链接" className="input mt-2" />
-              <textarea name="description" value={form.description || ''} onChange={handleChange} placeholder="项目描述" className="textarea mt-2" rows={4} />
+              <label className="block mt-3 mb-1 font-semibold">项目描述</label>
+              <SimpleMDE
+                value={form.description || ""}
+                onChange={v => setForm(f => ({ ...f, description: v }))}
+                options={{
+                  spellChecker: false,
+                  placeholder: "输入项目描述，支持Markdown格式~",
+                  minHeight: '160px',
+                  status: false
+                }}
+              />
               <input
                 name="finishedAt"
                 type="date"
