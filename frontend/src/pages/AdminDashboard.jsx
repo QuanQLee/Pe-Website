@@ -214,14 +214,16 @@ const columns = useMemo(() => {
 
       {/* 编辑弹窗 */}
       {modalOpen && (
-       <EditModal
-         type={tab}
-         initialForm={editing || {}}
-         modalOpen={modalOpen}      // 新增这一行
-         onSave={handleSave}
-         onCancel={() => { setModalOpen(false); setEditing(null); }}
+        <EditModal
+          key={editing ? (editing._id || editing.slug || Math.random()) : 'new'}
+          type={tab}
+          initialForm={editing || {}}
+          modalOpen={modalOpen}
+          onSave={handleSave}
+          onCancel={() => { setModalOpen(false); setEditing(null); }}
         />
-       )}
+      )}
+
 
     </div>
   );
