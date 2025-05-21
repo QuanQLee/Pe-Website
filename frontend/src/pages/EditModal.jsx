@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
@@ -8,11 +8,18 @@ const simpleSlugify = (str) =>
 
 export default function EditModal({ type, initialForm = {}, modalOpen, onSave, onCancel }) {
   const [form, setForm] = useState(initialForm || {});
+  const justOpened = useRef(false);
 
   useEffect(() => {
-    if (modalOpen) setForm(initialForm || {});
-  }, [modalOpen]); // 依赖只用 modalOpen
-
+    // 只在弹窗刚刚从关闭变为打开时初始化一次表单
+    if (modalOpen && !justOpened.current) {
+      setForm(initialForm || {});
+      justOpened.current = true;
+    }
+    if (!modalOpen) {
+      justOpened.current = false;
+    }
+  }, [modalOpen, initialForm]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
