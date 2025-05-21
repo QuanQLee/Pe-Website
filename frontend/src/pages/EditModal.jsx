@@ -6,12 +6,13 @@ import "easymde/dist/easymde.min.css";
 const simpleSlugify = (str) =>
   str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-export default function EditModal({ type, initialForm = {}, onSave, onCancel }) {
+export default function EditModal({ type, initialForm = {}, modalOpen, onSave, onCancel }) {
   const [form, setForm] = useState(initialForm || {});
 
   useEffect(() => {
-    setForm(initialForm || {});
-  }, [initialForm]);
+    if (modalOpen) setForm(initialForm || {});
+  }, [modalOpen]); // 依赖只用 modalOpen
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
