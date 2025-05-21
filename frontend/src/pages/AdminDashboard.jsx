@@ -90,7 +90,7 @@ const columns = useMemo(() => {
         cell: ({ row }) => (
           <div className="flex gap-2">
             <button
-              onClick={() => { setEditing(row.original); setModalOpen(true); }}
+              onClick={() => { setEditing(JSON.parse(JSON.stringify(row.original))); setModalOpen(true); }}
               className="btn-outline"
               title="编辑"
             >编辑</button>
@@ -223,8 +223,6 @@ const columns = useMemo(() => {
           onCancel={() => { setModalOpen(false); setEditing(null); }}
         />
       )}
-
-
     </div>
   );
 }
