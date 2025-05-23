@@ -9,6 +9,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEditor from './pages/AdminEditor';
 
 export default function App() {
   return (
