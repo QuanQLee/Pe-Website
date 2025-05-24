@@ -9,6 +9,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEditor from './pages/AdminEditor';         // 新增这行
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/editor/:type/:id?" element={<AdminEditor />} />   {/* ← 必须有！ */}
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
