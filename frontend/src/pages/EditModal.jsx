@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import SimpleMDE from "react-simplemde-editor";
-import "easymde/dist/easymde.min.css";
 
 const simpleSlugify = (str) =>
   str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -11,7 +9,6 @@ export default function EditModal({ type, initialForm = {}, modalOpen, onSave, o
   const justOpened = useRef(false);
 
   useEffect(() => {
-    // 只在弹窗刚刚从关闭变为打开时初始化一次表单
     if (modalOpen && !justOpened.current) {
       setForm(initialForm || {});
       justOpened.current = true;
@@ -64,15 +61,13 @@ export default function EditModal({ type, initialForm = {}, modalOpen, onSave, o
                 className="input mt-2"
               />
               <label className="block mt-3 mb-1 font-semibold">内容</label>
-              <SimpleMDE
+              <textarea
                 value={form.content || ""}
-                onChange={v => setForm(f => ({ ...f, content: v }))}
-                options={{
-                  spellChecker: false,
-                  placeholder: "输入内容，支持Markdown格式~",
-                  minHeight: '200px',
-                  status: false
-                }}
+                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                rows={10}
+                style={{ width: "100%", resize: "vertical" }}
+                placeholder="输入内容，支持Markdown格式"
+                className="input mt-2"
               />
             </>
           ) : (
@@ -87,15 +82,13 @@ export default function EditModal({ type, initialForm = {}, modalOpen, onSave, o
               )}
               <input name="link" value={form.link || ''} onChange={handleChange} placeholder="项目链接" className="input mt-2" />
               <label className="block mt-3 mb-1 font-semibold">项目描述</label>
-              <SimpleMDE
+              <textarea
                 value={form.description || ""}
-                onChange={v => setForm(f => ({ ...f, description: v }))}
-                options={{
-                  spellChecker: false,
-                  placeholder: "输入项目描述，支持Markdown格式~",
-                  minHeight: '160px',
-                  status: false
-                }}
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                rows={6}
+                style={{ width: "100%", resize: "vertical" }}
+                placeholder="输入项目描述，支持Markdown格式"
+                className="input mt-2"
               />
               <input
                 name="finishedAt"
@@ -109,7 +102,14 @@ export default function EditModal({ type, initialForm = {}, modalOpen, onSave, o
         </div>
         <div className="modal-footer">
           <button className="btn mr-2" onClick={onCancel}>取消</button>
-          <button className={clsx('btn btn-primary', { 'opacity-50 pointer-events-none': type === 'blog' ? !form.title?.trim() || !form.content?.trim() : !form.name?.trim() })} onClick={handleSave}>保存</button>
+          <button
+            className={clsx('btn btn-primary', {
+              'opacity-50 pointer-events-none': type === 'blog'
+                ? !form.title?.trim() || !form.content?.trim()
+                : !form.name?.trim()
+            })}
+            onClick={handleSave}
+          >保存</button>
         </div>
       </div>
     </div>
