@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.PROD
-    ? 'https://test-production-fe71.up.railway.app/api'
+    ? 'https://pe-website-production-fe71.up.railway.app/api'
     : 'http://localhost:4000/api'
 });
 
