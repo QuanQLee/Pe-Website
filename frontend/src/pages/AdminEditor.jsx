@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import SimpleMDE from 'react-simplemde-editor';
-import 'easymde/dist/easymde.min.css';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
 import api from '../api';
 console.log('AdminEditor loaded', localStorage.getItem('token'));
 
@@ -62,10 +63,10 @@ export default function AdminEditor() {
           <input name="coverImg" value={form.coverImg || ''} onChange={onInput} placeholder="封面图片 URL" className="input w-full" />
 
           <label className="block font-semibold mt-4 mb-1">内容</label>
-          <SimpleMDE
+          <MDEditor
             value={form.content || ''}
             onChange={v => setForm(f => ({ ...f, content: v }))}
-            options={{ spellChecker:false, minHeight:'300px', status:false }}
+            height={300}
           />
         </>
       ) : (
@@ -76,10 +77,10 @@ export default function AdminEditor() {
           <input name="link" value={form.link || ''} onChange={onInput} placeholder="项目链接" className="input w-full" />
 
           <label className="block font-semibold mt-4 mb-1">项目描述</label>
-          <SimpleMDE
+          <MDEditor
             value={form.description || ''}
             onChange={v => setForm(f => ({ ...f, description: v }))}
-            options={{ spellChecker:false, minHeight:'250px', status:false }}
+            height={250}
           />
 
           <label className="block font-semibold mt-4 mb-1">完成日期</label>
